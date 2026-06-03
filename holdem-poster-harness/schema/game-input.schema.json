@@ -1,0 +1,146 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Hold'em Poster Game Input",
+  "description": "운영자는 이 스키마만 채운다. 골격/품질은 엔진(01_master-prompt)이 강제한다.",
+  "type": "object",
+  "required": ["archetype", "brand", "theme", "venue", "sponsors"],
+  "properties": {
+    "archetype": {
+      "type": "string",
+      "enum": ["A", "B", "C", "auto"],
+      "description": "auto면 라우터가 events 수/structure 유무로 자동 판정"
+    },
+    "theme": {
+      "type": "string",
+      "enum": ["flame_blue", "golden_door", "ocean_teal", "space_blue", "animal_dark", "wood_warm", "series_red", "series_purple", "series_blue"],
+      "description": "스타일 토큰 프리셋"
+    },
+    "canvas": {
+      "type": "object",
+      "properties": {
+        "ratio": { "type": "string", "enum": ["3:5", "4:5", "9:16"], "default": "3:5" }
+      }
+    },
+    "brand": {
+      "type": "object",
+      "required": ["logo_text"],
+      "properties": {
+        "logo_text": { "type": "string", "default": "POKER of DREAMS" },
+        "brand_mark": { "type": "string", "description": "예: 대구 ANPT" },
+        "series_badge": { "type": "string", "description": "B/C: 예 DREAM SERIES" },
+        "series_total": { "type": "string", "description": "B/C: 예 400,000,000 TOTAL GUARANTEED" },
+        "trophy_badge": { "type": "boolean", "default": true, "description": "A0 옵션 밴드" }
+      }
+    },
+    "event": {
+      "type": "object",
+      "description": "아키타입 A/B 단일 이벤트",
+      "properties": {
+        "format_prefix": { "type": "string", "description": "옵션. 예: 8 MAX" },
+        "title": { "type": "string", "description": "예: CHALLENGE / Collaboration / MAIN EVENT" },
+        "title_accent": { "type": "string", "description": "옵션. 예: in 영주 / Chapter.4" },
+        "reward": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["gtd", "seat"] },
+            "amount": { "type": "string", "description": "gtd: 50,000,000 / seat: WIN YOUR SEAT @160,000" }
+          }
+        },
+        "datetime": { "type": "string", "description": "자연어형/숫자형 모두 허용" },
+        "buyin": { "type": "string", "description": "예: 1 Challenge Ticket / 1 Challenge OR 20PP OR 20FP / 20 SEED" },
+        "stats": {
+          "type": "object",
+          "description": "A: entry/starting/late_reg/blind  |  B: stack/end_reg/duration/entry",
+          "properties": {
+            "entry": { "type": "string" },
+            "starting": { "type": "string" },
+            "late_reg": { "type": "string" },
+            "blind": { "type": "string" },
+            "stack": { "type": "string" },
+            "end_reg": { "type": "string" },
+            "duration": { "type": "string" }
+          }
+        },
+        "collab": {
+          "type": "object",
+          "description": "옵션. 콜라보 파트너 락업",
+          "properties": {
+            "partners": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "structure": {
+          "type": "object",
+          "description": "B형 블라인드 스트럭처. 있으면 archetype=B",
+          "properties": {
+            "levels": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "lv": { "type": "string" },
+                  "sb": { "type": "string" },
+                  "bb": { "type": "string" },
+                  "ante": { "type": "string" },
+                  "blind": { "type": "string" },
+                  "note": { "type": "string", "description": "Break/Remove/END of REG 등 강조행" }
+                }
+              }
+            }
+          }
+        },
+        "prizes": {
+          "type": "array",
+          "description": "B형 프라이즈표(옵션, 없으면 좌컬럼=스탯리스트)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rank": { "type": "string" },
+              "prize": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "description": "아키타입 C 시리즈 스케줄. 2개 이상이면 archetype=C",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": { "type": "string" },
+          "time": { "type": "string" },
+          "event": { "type": "string" },
+          "buyin": { "type": "string" },
+          "gtd": { "type": "string" },
+          "entry": { "type": "string" },
+          "stack": { "type": "string" },
+          "level": { "type": "string" },
+          "entry_close": { "type": "string" }
+        }
+      }
+    },
+    "notice": {
+      "type": "array",
+      "description": "Notice for Player 불릿. 공통풀 + 전용행. 개수 가변, 헤더는 엔진 고정.",
+      "items": { "type": "string" }
+    },
+    "venue": {
+      "type": "object",
+      "required": ["name", "address"],
+      "properties": {
+        "name": { "type": "string" },
+        "address": { "type": "string" }
+      }
+    },
+    "sponsors": {
+      "type": "object",
+      "description": "스폰서 바 4구역",
+      "properties": {
+        "host": { "type": "array", "items": { "type": "string" } },
+        "partner": { "type": "array", "items": { "type": "string" } },
+        "support": { "type": "array", "items": { "type": "string" } },
+        "place": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
