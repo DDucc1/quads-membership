@@ -5,7 +5,7 @@
 외부 이미지 없이(저작권 클린) 테마별 히어로 배경을 합성한다.
 현재: flame_blue(푸른 불꽃 기둥 + 연기). 다른 테마는 ramp/형상만 바꾸면 확장 가능.
 """
-import sys
+import sys, math
 import numpy as np
 from PIL import Image
 
@@ -97,7 +97,46 @@ def flame_blue(seed=11):
 
     return Image.fromarray((np.clip(img, 0, 1) * 255).astype("uint8"), "RGB")
 
-GENERATORS = {"flame_blue": flame_blue}
+def series_purple(seed=3):
+    """추상 광선 리본 — 딥퍼플 배경에 흐르는 마젠타/바이올렛 곡선광 (시리즈 컨셉)."""
+    yy, xx = np.mgrid[0:H, 0:W].astype(float)
+    nx = xx / W; ny = yy / H
+
+    # 베이스 세로 그라데이션 (상단 진보라 → 하단 암자주)
+    base = ramp(ny, [(0.0, (58, 20, 96)), (0.45, (40, 14, 74)),
+                     (1.0, (16, 7, 34))]) / 255.0
+
+    img = base.copy()
+    ribbons = [
+        # (angle, freq, amp, width, color, gain)
+        (-0.55, 2.1, 0.10, 0.045, (190, 90, 230), 0.9),
+        (-0.40, 1.5, 0.14, 0.075, (120, 70, 220), 0.7),
+        (-0.62, 2.8, 0.08, 0.030, (230, 150, 250), 0.8),
+        (-0.30, 1.2, 0.18, 0.110, (70, 40, 150), 0.5),
+    ]
+    for ang, freq, amp, width, color, gain in ribbons:
+        ca, sa = math.cos(ang), math.sin(ang)
+        u = nx * ca + ny * sa
+        v = -nx * sa + ny * ca
+        center = 0.5 + amp * np.sin(freq * math.pi * (u * 2 - 0.5))
+        band = np.exp(-((v - center) / width) ** 2) * gain
+        # 노이즈로 리본에 질감
+        band *= (0.6 + 0.6 * fbm(H, W, seed + 200 + int(abs(ang) * 100), 5))
+        col = np.array(color) / 255.0
+        img = 1 - (1 - img) * (1 - col[None, None, :] * band[..., None])
+
+    # 미세 입자/별
+    rng = np.random.default_rng(seed + 50)
+    sp = (rng.random((H, W)) > 0.9994).astype(float)
+    img = img + sp[..., None] * np.array([0.7, 0.6, 0.8])[None, None, :]
+
+    # 비네팅 (가장자리·하단 어둡게 → 표/텍스트 패널 대비)
+    r = np.sqrt(((nx - 0.5) * 1.1) ** 2 + ((ny - 0.32) * 1.2) ** 2)
+    vig = np.clip(1.06 - (r - 0.45) * 0.9, 0.38, 1.0)
+    img = img * vig[..., None]
+    return Image.fromarray((np.clip(img, 0, 1) * 255).astype("uint8"), "RGB")
+
+GENERATORS = {"flame_blue": flame_blue, "series_purple": series_purple}
 
 if __name__ == "__main__":
     theme = sys.argv[1] if len(sys.argv) > 1 else "flame_blue"
