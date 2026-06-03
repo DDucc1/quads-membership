@@ -4,3 +4,5 @@ dist
 *.log
 .env
 .env.local
+# poster harness: 폰트 바이너리는 fetch_fonts.sh로 받음
+holdem-poster-harness/assets/*.ttf
