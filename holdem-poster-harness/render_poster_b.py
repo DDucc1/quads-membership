@@ -16,13 +16,15 @@ SAFE_T = round(H * 0.03); SAFE_B = H - SAFE_T
 CW = SAFE_R - SAFE_L; CX = W // 2
 
 ASSET = "assets/"
-C = dict(
-    text_hi=(242, 240, 250), text_lo=(202, 192, 218), mute=(150, 138, 172),
-    gold=(244, 206, 120), gold_lo=(206, 156, 64),
-    accent=(186, 134, 238), accent_soft=(212, 178, 248),
-    line=(96, 70, 140), break_bg=(108, 64, 168), zebra=(255, 255, 255),
-    red=(206, 46, 74), panel=(22, 13, 44),
-)
+_base = dict(text_hi=(242,240,250), text_lo=(202,192,218), mute=(150,138,172),
+             gold=(244,206,120), gold_lo=(206,156,64), zebra=(255,255,255),
+             red=(206,46,74), panel=(22,13,44))
+THEMES_B = {
+  "series_purple": dict(_base, accent=(186,134,238), accent_soft=(212,178,248), line=(96,70,140), break_bg=(108,64,168)),
+  "series_red":    dict(_base, accent=(236,84,86), accent_soft=(255,156,150), line=(128,54,58), break_bg=(150,50,55)),
+  "series_blue":   dict(_base, accent=(78,156,246), accent_soft=(160,202,255), line=(58,90,150), break_bg=(44,92,168)),
+}
+C = THEMES_B["series_purple"]
 
 def bg(theme="series_purple"):
     p = f"{ASSET}bg/{theme}.jpg"
@@ -135,7 +137,9 @@ def blind_group(d, x0, y0, w, rows, rh, hf, cf):
     return y
 
 def render(data, out="demo_B.png"):
-    img = bg(); d = ImageDraw.Draw(img, "RGBA")
+    global C
+    C = THEMES_B.get(data.get("theme","series_purple"), THEMES_B["series_purple"])
+    img = bg(data.get("theme","series_purple")); d = ImageDraw.Draw(img, "RGBA")
 
     # ---- B0 로고 (TL) ----
     ly = SAFE_T + 6; es = 46

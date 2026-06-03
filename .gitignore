@@ -9,3 +9,4 @@ holdem-poster-harness/assets/*.ttf
 holdem-poster-harness/assets/bg/*.jpg
 __pycache__/
 *.pyc
+holdem-poster-harness/out/

@@ -14,11 +14,24 @@ CW = SAFE_R - SAFE_L; CX = W // 2
 
 ASSET = "assets/"; NOTO = ASSET + "NotoSansKR.ttf"; ANTON = ASSET + "Anton.ttf"
 
-TH = dict(
-    accent=(80, 200, 252), accent_soft=(150, 220, 255),
-    text_hi=(240, 247, 255), text_lo=(176, 196, 220), text_mute=(120, 144, 172),
-    line=(58, 92, 134),
-)
+THEMES = {
+  "flame_blue":  dict(accent=(80,200,252), accent_soft=(150,220,255), text_hi=(240,247,255),
+                      text_lo=(176,196,220), line=(58,92,134), title_lo=(188,226,255),
+                      glow=(20,90,150), gtd_lo=(165,215,255)),
+  "ocean_teal":  dict(accent=(58,214,192), accent_soft=(150,238,222), text_hi=(238,252,248),
+                      text_lo=(178,214,204), line=(40,108,98), title_lo=(168,236,222),
+                      glow=(14,118,104), gtd_lo=(150,236,216)),
+  "space_blue":  dict(accent=(96,156,250), accent_soft=(166,198,255), text_hi=(238,243,255),
+                      text_lo=(182,196,226), line=(50,72,132), title_lo=(182,206,255),
+                      glow=(28,72,162), gtd_lo=(172,202,255)),
+  "golden_door": dict(accent=(245,196,92), accent_soft=(255,222,150), text_hi=(250,245,236),
+                      text_lo=(212,196,170), line=(112,90,52), title_lo=(250,226,160),
+                      glow=(140,98,28), gtd_lo=(250,212,122)),
+  "series_red":  dict(accent=(242,84,82), accent_soft=(255,152,142), text_hi=(251,240,240),
+                      text_lo=(216,186,186), line=(122,52,56), title_lo=(255,182,172),
+                      glow=(140,30,34), gtd_lo=(255,162,150)),
+}
+TH = THEMES["flame_blue"]
 
 def noto(size, weight=400):
     f = ImageFont.truetype(NOTO, size)
@@ -138,6 +151,8 @@ def rule(d, cx, y, w, col, h=3):
     d.rounded_rectangle([cx - w / 2, y, cx + w / 2, y + h], radius=h / 2, fill=col)
 
 def render(data, out="demo_A.png"):
+    global TH
+    TH = THEMES.get(data.get("theme"), THEMES["flame_blue"])
     img = build_bg(data["theme"]); d = ImageDraw.Draw(img, "RGBA")
 
     # A0 트로피 뱃지
@@ -160,10 +175,10 @@ def render(data, out="demo_A.png"):
     # ===== HERO =====
     # A2 타이틀 (크게, 이탤릭 시어) — 위계 대비 강화
     tf, _ = fit_font(data["title"], anton, CW - 30, 215, 120)
-    ti, tw, thh = text_img(data["title"], tf, TH["text_hi"], (188, 226, 255))
+    ti, tw, thh = text_img(data["title"], tf, TH["text_hi"], TH["title_lo"])
     ti = shear_img(ti, 0.15)
     ty = 244
-    place(img, ti, CX, ty, shadow=True, glow_col=(20, 90, 150))
+    place(img, ti, CX, ty, shadow=True, glow_col=TH["glow"])
     # 악센트 (타이틀 상단 위, 명확한 갭)
     if data.get("accent"):
         af = noto(40, 700); aw, ah = measure(data["accent"], af)
@@ -174,10 +189,10 @@ def render(data, out="demo_A.png"):
     # A3 GTD (타이틀 직하, 밀착 lockup)
     gy = htb - 6
     gf, gsz = fit_font(data["gtd"], anton, CW - 220, 118, 74)
-    gi, gw, gh = text_img(data["gtd"], gf, (255, 255, 255), (165, 215, 255))
+    gi, gw, gh = text_img(data["gtd"], gf, (255, 255, 255), TH["gtd_lo"])
     sf = anton(int(gsz * 0.40)); sw, _ = measure("GTD", sf)
     tot = gw + sw + 14; x0 = CX - tot / 2
-    place(img, gi, x0 + gw / 2, gy, shadow=True, glow_col=(20, 90, 150))
+    place(img, gi, x0 + gw / 2, gy, shadow=True, glow_col=TH["glow"])
     d.text((x0 + gw + 14, gy + gh * 0.30), "GTD", font=sf, fill=TH["accent"], anchor="lm")
     # 히어로 구분 룰
     rule(d, CX, gy + gh + 14, 120, TH["accent"] + (235,))
