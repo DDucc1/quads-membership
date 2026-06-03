@@ -1,135 +1,121 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-홀덤 포스터 하네스 — 아키타입 A 렌더러 (1차 초안)
-01_master-prompt.md 의 GRID SPEC / STEP4 오토핏 / 세이프존 규칙을 좌표로 구현.
-입력(JSON)만 바꾸면 동일 골격으로 재현된다.
+홀덤 포스터 하네스 — 아키타입 A 렌더러
+01_master-prompt.md GRID SPEC / STEP4 오토핏 / 세이프존 구현 + 절차적 배경 합성.
 """
-import json, math, sys
+import os, sys
 from PIL import Image, ImageDraw, ImageFont, ImageChops, ImageFilter
 
-# ---------- 캔버스 / 세이프존 (FIXED) ----------
 W, H = 1080, 1800
-SAFE_L = round(W * 0.06)      # 65
-SAFE_R = W - SAFE_L           # 1015
-SAFE_T = round(H * 0.03)      # 54
-SAFE_B = H - SAFE_T           # 1746
-CW = SAFE_R - SAFE_L          # 950 content width
-CX = W // 2
+SAFE_L = round(W * 0.06); SAFE_R = W - SAFE_L
+SAFE_T = round(H * 0.03); SAFE_B = H - SAFE_T
+CW = SAFE_R - SAFE_L; CX = W // 2
 
-ASSET = "assets/"
-NOTO = ASSET + "NotoSansKR.ttf"
-ANTON = ASSET + "Anton.ttf"
+ASSET = "assets/"; NOTO = ASSET + "NotoSansKR.ttf"; ANTON = ASSET + "Anton.ttf"
 
-# ---------- 테마 토큰: flame_blue ----------
 TH = dict(
-    bg_top=(9, 16, 33), bg_bottom=(3, 6, 15),
-    accent=(56, 189, 248), glow=(34, 211, 238), accent_deep=(14, 116, 178),
-    text_hi=(238, 246, 255), text_lo=(150, 172, 198), text_mute=(110, 132, 158),
-    panel=(13, 24, 44), line=(40, 70, 110),
+    accent=(80, 200, 252), accent_soft=(150, 220, 255),
+    text_hi=(240, 247, 255), text_lo=(176, 196, 220), text_mute=(120, 144, 172),
+    line=(58, 92, 134),
 )
 
-# ---------- 폰트 ----------
 def noto(size, weight=400):
     f = ImageFont.truetype(NOTO, size)
     try: f.set_variation_by_axes([weight])
     except Exception: pass
     return f
-def anton(size):
-    return ImageFont.truetype(ANTON, size)
+def anton(size): return ImageFont.truetype(ANTON, size)
 
-_scratch = ImageDraw.Draw(Image.new("RGB", (10, 10)))
-def measure(text, font, ls=0):
-    if ls == 0:
-        b = _scratch.textbbox((0, 0), text, font=font)
-        return b[2] - b[0], b[3] - b[1]
-    w = sum(_scratch.textlength(ch, font=font) for ch in text) + ls * max(0, len(text) - 1)
-    b = _scratch.textbbox((0, 0), text, font=font)
-    return int(w), b[3] - b[1]
-
-def fit_font(text, factory, max_w, start, min_size, ls=0):
-    """STEP4 오토핏: max_w 넘으면 폰트 스텝다운(최저 min_size)."""
+_sc = ImageDraw.Draw(Image.new("RGB", (4, 4)))
+def measure(t, f):
+    b = _sc.textbbox((0, 0), t, font=f); return b[2] - b[0], b[3] - b[1]
+def fit_font(t, fac, max_w, start, mn):
     s = start
-    while s > min_size:
-        f = factory(s)
-        w, _ = measure(text, f, ls)
-        if w <= max_w: return f, s
+    while s > mn:
+        if measure(t, fac(s))[0] <= max_w: return fac(s), s
         s -= 2
-    return factory(min_size), min_size
-
-# ---------- 그리기 헬퍼 ----------
-def draw_ls(draw, xy, text, font, fill, ls=0, anchor="la"):
-    """자간(ls) 지원 텍스트. anchor의 첫 글자(l/m/r)로 정렬."""
-    if ls == 0:
-        draw.text(xy, text, font=font, fill=fill, anchor=anchor); return
-    tw = sum(draw.textlength(ch, font=font) for ch in text) + ls * max(0, len(text) - 1)
-    x, y = xy
-    ha = anchor[0]
+    return fac(mn), mn
+def lsw(t, f, ls):
+    return sum(_sc.textlength(c, font=f) for c in t) + ls * max(0, len(t) - 1)
+def draw_ls(d, xy, t, f, fill, ls=0, anchor="la"):
+    if ls == 0: d.text(xy, t, font=f, fill=fill, anchor=anchor); return
+    x, y = xy; ha = anchor[0]; va = anchor[1] if len(anchor) > 1 else "a"
+    tw = lsw(t, f, ls)
     if ha == "m": x -= tw / 2
     elif ha == "r": x -= tw
-    va = anchor[1] if len(anchor) > 1 else "a"
-    for ch in text:
-        draw.text((x, y), ch, font=font, fill=fill, anchor="l" + va)
-        x += draw.textlength(ch, font=font) + ls
+    for c in t:
+        d.text((x, y), c, font=f, fill=fill, anchor="l" + va); x += _sc.textlength(c, font=f) + ls
 
-def text_img(text, font, fill_top, fill_bottom=None, pad=8):
-    """텍스트를 RGBA 이미지로(세로 그라데이션 옵션). 반환: (img, w, h)."""
-    b = _scratch.textbbox((0, 0), text, font=font)
-    w, h = b[2] - b[0] + pad * 2, b[3] - b[1] + pad * 2
-    mask = Image.new("L", (w, h), 0)
-    ImageDraw.Draw(mask).text((pad - b[0], pad - b[1]), text, font=font, fill=255)
-    if fill_bottom is None:
-        col = Image.new("RGBA", (w, h), fill_top + (255,))
+def text_img(t, f, top, bottom=None, pad=10):
+    b = _sc.textbbox((0, 0), t, font=f); w, h = b[2] - b[0] + 2 * pad, b[3] - b[1] + 2 * pad
+    m = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(m).text((pad - b[0], pad - b[1]), t, font=f, fill=255)
+    if bottom is None:
+        col = Image.new("RGBA", (w, h), top + (255,))
     else:
-        grad = Image.new("RGBA", (1, h))
-        for yy in range(h):
-            t = yy / max(1, h - 1)
-            c = tuple(int(fill_top[i] * (1 - t) + fill_bottom[i] * t) for i in range(3))
-            grad.putpixel((0, yy), c + (255,))
-        col = grad.resize((w, h))
-    out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    out.paste(col, (0, 0), mask)
+        g = Image.new("RGBA", (1, h))
+        for y in range(h):
+            tt = y / max(1, h - 1)
+            g.putpixel((0, y), tuple(int(top[i] * (1 - tt) + bottom[i] * tt) for i in range(3)) + (255,))
+        col = g.resize((w, h))
+    out = Image.new("RGBA", (w, h), (0, 0, 0, 0)); out.paste(col, (0, 0), m)
     return out, w, h
 
-def paste_center(base, img, cx, y_top):
-    base.alpha_composite(img, (int(cx - img.width / 2), int(y_top)))
+def shear_img(im, k=0.16):
+    ext = int(im.height * k)
+    cv = Image.new("RGBA", (im.width + ext, im.height), (0, 0, 0, 0)); cv.paste(im, (0, 0))
+    return cv.transform((im.width + ext, im.height), Image.AFFINE, (1, k, -ext * 0.12, 0, 1, 0), resample=Image.BICUBIC)
 
-def radial(size, inner, outer, cx, cy, radius):
-    img = Image.new("RGB", size, outer); d = ImageDraw.Draw(img)
-    steps = 120
-    for i in range(steps, 0, -1):
-        t = i / steps; r = radius * t
-        c = tuple(int(outer[k] * t + inner[k] * (1 - t)) for k in range(3))
-        d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=c)
-    return img
+def place(base, im, cx, y, shadow=True, glow_col=None):
+    """텍스트 이미지 합성 — 가독용 다크 섀도 + 선택적 컬러 글로우."""
+    x = int(cx - im.width / 2)
+    a = im.split()[3]
+    if shadow:
+        sh = Image.new("RGBA", im.size, (0, 0, 0, 0))
+        sh.paste(Image.new("RGBA", im.size, (0, 6, 14, 255)), (0, 0), a)
+        sh = sh.filter(ImageFilter.GaussianBlur(18))
+        base.alpha_composite(sh, (x, int(y) + 3)); base.alpha_composite(sh, (x, int(y) + 3))
+    if glow_col:
+        gl = Image.new("RGBA", im.size, (0, 0, 0, 0))
+        gl.paste(Image.new("RGBA", im.size, glow_col + (255,)), (0, 0), a)
+        gl = gl.filter(ImageFilter.GaussianBlur(10)); base.alpha_composite(gl, (x, int(y)))
+    base.alpha_composite(im, (x, int(y)))
 
-# ================= 배경 =================
-def build_bg():
-    base = Image.new("RGB", (W, H)); d = ImageDraw.Draw(base)
+# ---------- 배경 ----------
+def build_bg(theme):
+    p = f"{ASSET}bg/{theme}.jpg"
+    if os.path.exists(p):
+        bg = Image.open(p).convert("RGB").resize((W, H))
+        bg = bg.point(lambda v: int(v * 0.80))          # 불꽃 전체 톤 다운(대비 여유)
+        bg = bg.convert("RGBA")
+    else:
+        bg = Image.new("RGBA", (W, H), (6, 10, 22, 255))
+    # 상단/하단 스크림(로고·정보 영역 대비)
+    top = Image.new("L", (1, H), 0)
     for y in range(H):
-        t = y / (H - 1)
-        c = tuple(int(TH["bg_top"][i] * (1 - t) + TH["bg_bottom"][i] * t) for i in range(3))
-        d.line([(0, y), (W, y)], fill=c)
-    # 중앙 시안 플레임 글로우 (가독 위해 상단부에)
-    glow = radial((W, H), TH["glow"], (0, 0, 0), CX, int(H * 0.30), int(W * 0.55))
-    glow = glow.point(lambda v: int(v * 0.55))
-    base = ImageChops.screen(base, glow)
-    glow2 = radial((W, H), TH["accent_deep"], (0, 0, 0), CX, int(H * 0.30), int(W * 0.30))
-    base = ImageChops.screen(base, glow2.point(lambda v: int(v * 0.6)))
-    # 비네팅(가장자리 어둡게 → 세이프존 여백 강조 + 텍스트 대비)
-    vig = radial((W, H), (255, 255, 255), (70, 70, 70), CX, int(H * 0.42), int(H * 0.62))
-    base = ImageChops.multiply(base, vig)
-    return base.convert("RGBA")
+        t = y / H; v = 0
+        if t < 0.12: v = int(160 * (1 - t / 0.12))                 # 상단
+        if t > 0.50: v = int(min(232, 232 * (t - 0.50) / 0.40))    # 하단 정보영역
+        top.putpixel((0, y), v)
+    scrim = Image.new("RGBA", (W, H), (3, 7, 16, 255)); scrim.putalpha(top.resize((W, H)))
+    bg.alpha_composite(scrim)
+    # 히어로~BUY-IN 텍스트 뒤 다크 스크림(밝은 불꽃 위 흰 글자 가독) — 세로로 길게
+    hs = Image.new("L", (W, H), 0); hd = ImageDraw.Draw(hs)
+    hd.ellipse([CX - 560, 150, CX + 560, 900], fill=135)
+    hs = hs.filter(ImageFilter.GaussianBlur(95))
+    hsc = Image.new("RGBA", (W, H), (2, 6, 14, 255)); hsc.putalpha(hs)
+    bg.alpha_composite(hsc)
+    return bg
 
-# ================= 콘텐츠(임의 게임내용) =================
+# ---------- 콘텐츠(임의) ----------
 DATA = {
   "theme": "flame_blue",
-  "trophy": "본 대회는 우승자에게 공식 트로피가 수여됩니다",
+  "trophy": "공식 트로피 수여",
   "logo": "POKER of DREAMS",
   "title": "CHALLENGE", "accent": "in 대전",
   "gtd": "30,000,000",
-  "datetime": "26.07.04 (토요일) 오후 2시",
-  "place": "대전 POD 스타디움",
+  "date": "26.07.04 (토요일) 오후 2시", "place": "대전 POD 스타디움",
   "buyin_label": "BUY-IN", "buyin": "1 Challenge Ticket",
   "stats": [("ENTRY", "120 Entry++"), ("STARTING", "60,000 Chips"),
             ("LATE REG", "16Lv 시작 전"), ("BLIND", "25/20 Mins")],
@@ -144,163 +130,119 @@ DATA = {
       "ENTRY NEW PLAYER CARD 지급 (첫 핸드에 사용 여부 체크)",
   ],
   "sponsors": [("주관사", "POKER of DREAMS"), ("협력사", "SEEDKET"),
-               ("후원사", "MOXSYS · 한베교류발전위원회"), ("장소", "대전 POD 스타디움")],
-  "footer_name": "대전 POD 스타디움",
-  "footer_addr": "대전광역시 서구 둔산로 100, 5층",
+               ("후원사", "MOXSYS"), ("장소", "대전 POD 스타디움")],
+  "footer_name": "대전 POD 스타디움", "footer_addr": "대전광역시 서구 둔산로 100, 5층",
 }
 
-# ================= 렌더 =================
+def rule(d, cx, y, w, col, h=3):
+    d.rounded_rectangle([cx - w / 2, y, cx + w / 2, y + h], radius=h / 2, fill=col)
+
 def render(data, out="demo_A.png"):
-    img = build_bg()
-    d = ImageDraw.Draw(img)
+    img = build_bg(data["theme"]); d = ImageDraw.Draw(img, "RGBA")
 
-    # ---- A0 트로피 뱃지 (top-left) ----
-    by = SAFE_T + 6
-    bf = noto(19, 450)
-    bt = data["trophy"]
-    pad_x, pad_y = 18, 11
-    tw, th = measure(bt, bf)
-    bh = th + pad_y * 2
-    d.rounded_rectangle([SAFE_L, by, SAFE_L + tw + pad_x * 2, by + bh], radius=bh // 2,
-                        fill=(255, 255, 255, 26), outline=TH["accent"] + (120,), width=1)
-    # 작은 트로피 아이콘
-    icx, icy = SAFE_L + pad_x + 6, by + bh // 2
-    d.ellipse([icx - 6, icy - 7, icx + 6, icy + 3], outline=TH["accent"], width=2)
-    d.line([icx, icy + 3, icx, icy + 7], fill=TH["accent"], width=2)
-    d.line([icx - 4, icy + 7, icx + 4, icy + 7], fill=TH["accent"], width=2)
-    d.text((SAFE_L + pad_x + 18, by + bh // 2), bt, font=bf, fill=TH["text_lo"], anchor="lm")
+    # A0 트로피 뱃지
+    by = SAFE_T + 8; bf = noto(18, 500)
+    bt = data["trophy"]; tw, th = measure(bt, bf); px, py = 16, 9; bh = th + py * 2
+    d.rounded_rectangle([SAFE_L, by, SAFE_L + tw + px * 2 + 20, by + bh], radius=bh / 2,
+                        fill=(255, 255, 255, 22), outline=TH["accent"] + (110,), width=1)
+    ix, iy = SAFE_L + px + 4, by + bh / 2
+    d.ellipse([ix - 5, iy - 6, ix + 5, iy + 2], outline=TH["accent"], width=2)
+    d.line([ix, iy + 2, ix, iy + 6], fill=TH["accent"], width=2)
+    d.line([ix - 3, iy + 6, ix + 3, iy + 6], fill=TH["accent"], width=2)
+    d.text((SAFE_L + px + 16, by + bh / 2), bt, font=bf, fill=TH["text_lo"], anchor="lm")
 
-    # ---- A1 로고 (center) ----
-    ly = 120
-    # 엠블럼: 라운드 사각 + PoD
-    es = 56
-    d.rounded_rectangle([CX - es//2, ly, CX + es//2, ly + es], radius=14,
-                        outline=TH["accent"], width=3)
-    ef = anton(30)
-    d.text((CX, ly + es//2 + 2), "PoD", font=ef, fill=TH["text_hi"], anchor="mm")
-    draw_ls(d, (CX, ly + es + 14), data["logo"].upper(), noto(20, 600), TH["text_hi"], ls=4, anchor="ma")
+    # A1 로고
+    ly = 118; es = 50
+    d.rounded_rectangle([CX - es / 2, ly, CX + es / 2, ly + es], radius=13, outline=TH["accent"], width=3)
+    d.text((CX, ly + es / 2 + 1), "PoD", font=anton(27), fill=TH["text_hi"], anchor="mm")
+    draw_ls(d, (CX, ly + es + 13), data["logo"].upper(), noto(18, 600), TH["accent_soft"], ls=5, anchor="ma")
 
-    # ---- A2 히어로 타이틀 (center, 이탤릭 시어) ----
-    ty = 256
-    tf, _ = fit_font(data["title"], anton, CW - 40, 200, 110)
-    ti, tw, thh = text_img(data["title"], tf, TH["text_hi"], (180, 224, 255))
-    # 이탤릭 시어
-    shear = 0.16
-    ext = int(thh * shear)
-    ti2 = Image.new("RGBA", (tw + ext, thh), (0, 0, 0, 0))
-    ti2.paste(ti, (0, 0))
-    ti2 = ti2.transform((tw + ext, thh), Image.AFFINE, (1, shear, -ext * 0.15, 0, 1, 0),
-                        resample=Image.BICUBIC)
-    # 글로우(대비 확보)
-    glow = Image.new("RGBA", ti2.size, (0, 0, 0, 0))
-    gm = ti2.split()[3]
-    gcol = Image.new("RGBA", ti2.size, TH["glow"] + (255,))
-    glow.paste(gcol, (0, 0), gm)
-    glow = glow.filter(ImageFilter.GaussianBlur(14))
-    paste_center(img, glow, CX, ty - 2)
-    paste_center(img, ti2, CX, ty)
-    title_bottom = ty + thh
-    # 악센트 "in 대전" (타이틀 우상단, 글자 충돌 방지 위해 타이틀 상단 위로)
+    # ===== HERO =====
+    # A2 타이틀 (크게, 이탤릭 시어) — 위계 대비 강화
+    tf, _ = fit_font(data["title"], anton, CW - 30, 215, 120)
+    ti, tw, thh = text_img(data["title"], tf, TH["text_hi"], (188, 226, 255))
+    ti = shear_img(ti, 0.15)
+    ty = 244
+    place(img, ti, CX, ty, shadow=True, glow_col=(20, 90, 150))
+    # 악센트 (타이틀 상단 위, 명확한 갭)
     if data.get("accent"):
-        af = noto(38, 700)
-        aw, ah = measure(data["accent"], af)
-        ax = min(SAFE_R - aw, CX + tw / 2 - aw + 10)
-        d.text((ax, ty - 34), data["accent"], font=af, fill=TH["accent"], anchor="la")
+        af = noto(40, 700); aw, ah = measure(data["accent"], af)
+        ax = min(SAFE_R - aw, CX + tw / 2 - aw + 18)
+        d.text((ax, ty - 40), data["accent"], font=af, fill=TH["accent"], anchor="la")
+    htb = ty + thh
 
-    # ---- A3 GTD (center) ----
-    gy = title_bottom + 18
-    gtxt = data["gtd"]
-    gf, gsz = fit_font(gtxt, anton, CW - 200, 116, 70)
-    gi, gw, gh = text_img(gtxt, gf, (255, 255, 255), (150, 210, 255))
-    sf = anton(int(gsz * 0.42))
-    sw, sh = measure(" GTD", sf)
-    total = gw + sw + 8
-    x0 = CX - total / 2
-    img.alpha_composite(gi, (int(x0), int(gy)))
-    d.text((x0 + gw + 8, gy + gh - sh - 6), "GTD", font=sf, fill=TH["accent"], anchor="la")
-    gtd_bottom = gy + gh
+    # A3 GTD (타이틀 직하, 밀착 lockup)
+    gy = htb - 6
+    gf, gsz = fit_font(data["gtd"], anton, CW - 220, 118, 74)
+    gi, gw, gh = text_img(data["gtd"], gf, (255, 255, 255), (165, 215, 255))
+    sf = anton(int(gsz * 0.40)); sw, _ = measure("GTD", sf)
+    tot = gw + sw + 14; x0 = CX - tot / 2
+    place(img, gi, x0 + gw / 2, gy, shadow=True, glow_col=(20, 90, 150))
+    d.text((x0 + gw + 14, gy + gh * 0.30), "GTD", font=sf, fill=TH["accent"], anchor="lm")
+    # 히어로 구분 룰
+    rule(d, CX, gy + gh + 14, 120, TH["accent"] + (235,))
 
-    # ---- A4 일시 / 장소 (center) ----
-    dy = max(gtd_bottom + 34, 640)
-    d.text((CX, dy), data["datetime"], font=noto(34, 500), fill=TH["text_lo"], anchor="ma")
-    pf, _ = fit_font(data["place"], lambda s: noto(s, 800), CW - 80, 52, 34)
-    d.text((CX, dy + 52), data["place"], font=pf, fill=TH["text_hi"], anchor="ma")
+    # ===== INFO (수직 리듬 차등: 정보부는 더 촘촘) =====
+    # A4 일시/장소
+    dy = gy + gh + 48
+    draw_ls(d, (CX, dy), data["date"], noto(31, 500), TH["text_lo"], ls=1, anchor="ma")
+    pf, _ = fit_font(data["place"], lambda s: noto(s, 800), CW - 80, 50, 32)
+    d.text((CX, dy + 46), data["place"], font=pf, fill=TH["text_hi"], anchor="ma")
 
-    # ---- A5 BUY-IN (center) ----
-    byy = 812
-    draw_ls(d, (CX, byy), data["buyin_label"], noto(26, 700), TH["accent"], ls=6, anchor="ma")
-    bf2, _ = fit_font(data["buyin"], lambda s: noto(s, 800), CW - 80, 62, 38)
-    d.text((CX, byy + 44), data["buyin"], font=bf2, fill=TH["text_hi"], anchor="ma")
+    # A5 BUY-IN
+    yb = dy + 124
+    draw_ls(d, (CX, yb), data["buyin_label"], noto(24, 700), TH["accent"], ls=8, anchor="ma")
+    bf2, _ = fit_font(data["buyin"], lambda s: noto(s, 800), CW - 80, 60, 38)
+    d.text((CX, yb + 40), data["buyin"], font=bf2, fill=TH["text_hi"], anchor="ma")
 
-    # ---- A6 스탯 4열 (FIXED: 빈 열 제거 후 재균등) ----
+    # A6 스탯 4열 — 가벼운 헤어라인 패널(딱딱함 완화)
     stats = [s for s in data["stats"] if s[1]]
-    sy0, sh_band = 966, 150
-    d.rounded_rectangle([SAFE_L, sy0, SAFE_R, sy0 + sh_band], radius=18,
-                        fill=TH["panel"] + (235,), outline=TH["line"] + (255,), width=1)
+    sy = yb + 128; bandh = 138
+    d.rounded_rectangle([SAFE_L, sy, SAFE_R, sy + bandh], radius=16, fill=(9, 18, 34, 200))
+    d.line([SAFE_L + 20, sy, SAFE_R - 20, sy], fill=TH["accent"] + (210,), width=2)
     n = len(stats); colw = CW / n
-    lab_f = noto(22, 500)
     for i, (lab, val) in enumerate(stats):
         cxx = SAFE_L + colw * (i + 0.5)
-        if i > 0:
-            d.line([SAFE_L + colw * i, sy0 + 28, SAFE_L + colw * i, sy0 + sh_band - 28],
-                   fill=TH["line"], width=1)
-        d.text((cxx, sy0 + 34), lab, font=lab_f, fill=TH["text_lo"], anchor="ma")
-        vf, _ = fit_font(val, lambda s: noto(s, 800), colw - 28, 40, 22)
-        d.text((cxx, sy0 + 78), val, font=vf, fill=TH["text_hi"], anchor="ma")
+        if i: d.line([SAFE_L + colw * i, sy + 30, SAFE_L + colw * i, sy + bandh - 30], fill=TH["line"] + (160,), width=1)
+        draw_ls(d, (cxx, sy + 30), lab, noto(20, 500), TH["accent_soft"], ls=2, anchor="ma")
+        vf, _ = fit_font(val, lambda s: noto(s, 800), colw - 26, 38, 21)
+        d.text((cxx, sy + 70), val, font=vf, fill=TH["text_hi"], anchor="ma")
 
-    # ---- A7 Notice 박스 ----
-    ny0 = sy0 + sh_band + 34
-    ny1 = 1556
-    d.rounded_rectangle([SAFE_L, ny0, SAFE_R, ny1], radius=18,
-                        fill=(8, 16, 30, 210), outline=TH["line"] + (255,), width=1)
-    # 헤더(경고 삼각형 + 텍스트)
-    hf = noto(30, 700)
-    htxt = "Notice for Player"
-    hw, hh = measure(htxt, hf)
-    tri_w = 30
-    total_h = tri_w + 12 + hw
-    hx = CX - total_h / 2
-    hcy = ny0 + 36
-    d.polygon([(hx, hcy + 13), (hx + tri_w, hcy + 13), (hx + tri_w / 2, hcy - 14)],
-              outline=TH["accent"], width=2)
-    d.text((hx + tri_w / 2, hcy + 4), "!", font=noto(20, 800), fill=TH["accent"], anchor="mm")
-    d.text((hx + tri_w + 12, hcy), htxt, font=hf, fill=TH["text_hi"], anchor="lm")
-    # 불릿
-    bf3 = noto(23, 400)
-    bx = SAFE_L + 34
-    line_h = 34
-    yy = ny0 + 78
-    maxw = CW - 68
+    # A7 Notice — 가벼운 박스
+    ny0 = sy + bandh + 30; ny1 = 1556
+    d.rounded_rectangle([SAFE_L, ny0, SAFE_R, ny1], radius=16, fill=(6, 13, 26, 200), outline=TH["line"] + (150,), width=1)
+    hf = noto(28, 700); htxt = "Notice for Player"; hw, _ = measure(htxt, hf)
+    tw2 = 28; total = tw2 + 12 + hw; hx = CX - total / 2; hcy = ny0 + 34
+    d.polygon([(hx, hcy + 12), (hx + tw2, hcy + 12), (hx + tw2 / 2, hcy - 13)], outline=TH["accent"], width=2)
+    d.text((hx + tw2 / 2, hcy + 3), "!", font=noto(18, 800), fill=TH["accent"], anchor="mm")
+    d.text((hx + tw2 + 12, hcy), htxt, font=hf, fill=TH["text_hi"], anchor="lm")
+    bx = SAFE_L + 34; yy = ny0 + 74; lh = 33; maxw = CW - 70
     for line in data["notice"]:
-        f = bf3
-        if measure("· " + line, f)[0] > maxw:
-            f, _ = fit_font("· " + line, lambda s: noto(s, 400), maxw, 23, 18)
+        f = noto(22, 400)
+        if measure("· " + line, f)[0] > maxw: f, _ = fit_font("· " + line, lambda s: noto(s, 400), maxw, 22, 17)
         d.text((bx, yy), "·", font=f, fill=TH["accent"], anchor="la")
-        d.text((bx + 22, yy), line, font=f, fill=TH["text_lo"], anchor="la")
-        yy += line_h
+        d.text((bx + 20, yy), line, font=f, fill=TH["text_lo"], anchor="la"); yy += lh
 
-    # ---- A8 스폰서 바 (4구역) ----
-    spy = ny1 + 34
-    sp = data["sponsors"]; m = len(sp); cw2 = CW / m
-    d.line([SAFE_L, spy - 12, SAFE_R, spy - 12], fill=TH["line"], width=1)
+    # A8 스폰서
+    spy = ny1 + 36; sp = data["sponsors"]; m = len(sp); cw2 = CW / m
+    d.line([SAFE_L, spy - 14, SAFE_R, spy - 14], fill=TH["line"] + (160,), width=1)
     for i, (lab, name) in enumerate(sp):
         cxx = SAFE_L + cw2 * (i + 0.5)
-        draw_ls(d, (cxx, spy), lab, noto(18, 600), TH["accent"], ls=2, anchor="ma")
-        nf, _ = fit_font(name, lambda s: noto(s, 600), cw2 - 16, 24, 13)
-        d.text((cxx, spy + 30), name, font=nf, fill=TH["text_hi"], anchor="ma")
+        draw_ls(d, (cxx, spy), lab, noto(17, 600), TH["accent"], ls=2, anchor="ma")
+        nf, _ = fit_font(name, lambda s: noto(s, 600), cw2 - 16, 22, 12)
+        d.text((cxx, spy + 28), name, font=nf, fill=TH["text_hi"], anchor="ma")
 
-    # ---- A9 푸터 ----
-    fy = SAFE_B - 36
-    d.line([SAFE_L, fy - 14, SAFE_R, fy - 14], fill=TH["line"], width=1)
-    nf = noto(24, 800); af = noto(22, 400)
-    nm = data["footer_name"]; ad = "   " + data["footer_addr"]
-    nmw = measure(nm, nf)[0]; adw = measure(ad, af)[0]
-    fx = CX - (nmw + adw) / 2
+    # A9 푸터
+    fy = SAFE_B - 30
+    d.line([SAFE_L, fy - 12, SAFE_R, fy - 12], fill=TH["line"] + (160,), width=1)
+    nf = noto(23, 800); af = noto(21, 400)
+    nm = data["footer_name"]; ad = data["footer_addr"]
+    nmw = lsw(nm, nf, 0); gap = 18; adw = measure(ad, af)[0]
+    fx = CX - (nmw + gap + adw) / 2
     d.text((fx, fy + 6), nm, font=nf, fill=TH["text_hi"], anchor="la")
-    d.text((fx + nmw, fy + 8), ad, font=af, fill=TH["text_lo"], anchor="la")
+    d.text((fx + nmw + gap, fy + 8), ad, font=af, fill=TH["text_lo"], anchor="la")
 
-    img.convert("RGB").save(out, quality=95)
-    print("saved", out)
+    img.convert("RGB").save(out, quality=95); print("saved", out)
 
 if __name__ == "__main__":
     render(DATA, sys.argv[1] if len(sys.argv) > 1 else "demo_A.png")
