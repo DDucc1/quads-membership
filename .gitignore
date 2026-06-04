@@ -10,3 +10,4 @@ holdem-poster-harness/assets/bg/*.jpg
 __pycache__/
 *.pyc
 holdem-poster-harness/out/
+holdem-poster-harness/demo_E_*
