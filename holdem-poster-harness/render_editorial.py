@@ -6,7 +6,7 @@
 B/C 렌더러는 이 모듈의 헬퍼를 import 한다.
 """
 import os, sys
-from PIL import Image, ImageDraw, ImageFilter, ImageEnhance, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageEnhance, ImageFont, ImageChops
 from render_poster import noto, measure, fit_font, draw_ls, lsw, text_img, theme_palette, ASSET
 
 W, H = 1080, 1800
@@ -77,6 +77,22 @@ def vtext(text, font, fill, ls=3):
     draw_ls(ImageDraw.Draw(im), (5, 4), text, font, fill, ls, "la")
     return im.rotate(90, expand=True)
 
+def hero_scrim(img, focus="left"):
+    """업로드 사진(동물/자연) 위 텍스트 가독용 적응형 스크림. 상단+좌측 어둡게."""
+    Wd, Hd = img.size
+    m = Image.new("L", (Wd, Hd), 0); md = ImageDraw.Draw(m)
+    for y in range(Hd):
+        t = y / Hd
+        top = max(0, 1 - t / 0.52) * 150        # 상단(타이틀/머니)
+        md.line([(0, y), (Wd, y)], fill=int(top))
+    # 좌측 가중(히어로 텍스트가 좌측)
+    lm = Image.new("L", (Wd, Hd), 0); ld = ImageDraw.Draw(lm)
+    for x in range(Wd):
+        ld.line([(x, 0), (x, Hd)], fill=int(max(0, 1 - x / (Wd * 0.62)) * 120))
+    m = ImageChops.lighter(m, lm)
+    sc = Image.new("RGBA", (Wd, Hd), (2, 4, 9, 255)); sc.putalpha(m.filter(ImageFilter.GaussianBlur(40)))
+    img.alpha_composite(sc); return img
+
 def base_bg(data, TH):
     hero = data.get("hero_image")
     if hero and os.path.exists(hero):
@@ -84,10 +100,10 @@ def base_bg(data, TH):
         im = im.resize((int(im.width * s), int(im.height * s)))
         x = (im.width - W) // 2; y = (im.height - H) // 2
         bg = im.crop((x, y, x + W, y + H)).convert("RGBA")
-    else:
-        p = f"{ASSET}bg/{data['theme']}.jpg"
-        bg = Image.open(p).convert("RGB").resize((W, H)).convert("RGBA") if os.path.exists(p) \
-            else Image.new("RGBA", (W, H), (8, 10, 20, 255))
+        return hero_scrim(grade(bg, TH["accent"]))
+    p = f"{ASSET}bg/{data['theme']}.jpg"
+    bg = Image.open(p).convert("RGB").resize((W, H)).convert("RGBA") if os.path.exists(p) \
+        else Image.new("RGBA", (W, H), (8, 10, 20, 255))
     return grade(bg, TH["accent"])
 
 def render(data, out="demo_E.png"):
