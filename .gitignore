@@ -11,3 +11,5 @@ __pycache__/
 *.pyc
 holdem-poster-harness/out/
 holdem-poster-harness/demo_E_*
+holdem-poster-harness/demo_EB_*
+holdem-poster-harness/demo_EC_*

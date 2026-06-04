@@ -1,43 +1,54 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-홀덤 포스터 — 에디토리얼 크래프트 렌더러 (사람 디자이너 느낌)
-핵심: 비대칭 좌측 정렬 · 프로스티드 글래스 패널(배경 실제 블러) · 거대 머니 타이포 ·
-      혼합 굵기 락업 · 세로 사이드 레일 · 시네마틱 컬러 그레이딩 · 클리셰 장식 제거.
-hero_image 경로가 주어지면 그 사진을 히어로 배경으로 합성(사진형 경로).
+홀덤 포스터 — 에디토리얼 크래프트 v2 (A형) + 공용 크래프트 툴킷.
+타이포: Bebas Neue / Oswald(영문 디스플레이) + Noto(한글). 텍스처: 라이트릭·스캔라인·그레인.
+B/C 렌더러는 이 모듈의 헬퍼를 import 한다.
 """
 import os, sys
-from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
-from render_poster import (noto, anton, measure, fit_font, draw_ls, lsw, text_img,
-                           theme_palette, ASSET)
+from PIL import Image, ImageDraw, ImageFilter, ImageEnhance, ImageFont
+from render_poster import noto, measure, fit_font, draw_ls, lsw, text_img, theme_palette, ASSET
 
 W, H = 1080, 1800
-ML = 96            # content left margin (비대칭 좌측 기준선)
-MR = W - 70
-RAILX = 66
-SAFE_B = H - 54
+ML, MR, RAILX, SAFE_B = 96, W - 70, 66, H - 54
 
-def grade(bg, acc):
-    base = bg.convert("RGB")
-    base = ImageEnhance.Color(base).enhance(1.14)
-    base = ImageEnhance.Contrast(base).enhance(1.10)
-    base = ImageEnhance.Brightness(base).enhance(0.80)
+# ---------- 폰트 ----------
+def bebas(s): return ImageFont.truetype(ASSET + "BebasNeue.ttf", s)
+def _var(path, s, axes):
+    f = ImageFont.truetype(path, s)
+    try: f.set_variation_by_axes(axes)
+    except Exception: pass
+    return f
+def oswald(s, w=500): return _var(ASSET + "Oswald.ttf", s, [w])
+def playfair(s, w=700): return _var(ASSET + "Playfair.ttf", s, [w])
+
+# ---------- 텍스처/그레이딩 ----------
+def grade(bg, acc, leak_xy=(0.82, 0.12)):
+    Wd, Hd = bg.size
+    base = ImageEnhance.Color(bg.convert("RGB")).enhance(1.16)
+    base = ImageEnhance.Contrast(base).enhance(1.12)
+    base = ImageEnhance.Brightness(base).enhance(0.78)
     img = base.convert("RGBA")
-    # 하단 시네마틱 다크 그라데이션
-    col = Image.new("L", (1, H), 0)
-    for y in range(H):
-        t = y / H
-        col.putpixel((0, y), int(245 * max(0, (t - 0.34) / 0.66) ** 1.3))
-    dk = Image.new("RGBA", (W, H), (2, 4, 10, 255)); dk.putalpha(col.resize((W, H)))
+    col = Image.new("L", (1, Hd), 0)
+    for y in range(Hd):
+        col.putpixel((0, y), int(248 * max(0, (y / Hd - 0.32) / 0.68) ** 1.3))
+    dk = Image.new("RGBA", (Wd, Hd), (2, 4, 9, 255)); dk.putalpha(col.resize((Wd, Hd)))
     img.alpha_composite(dk)
-    # 좌상단 미세 악센트 광원
-    gl = Image.new("L", (W, H), 0); ImageDraw.Draw(gl).ellipse([-300, -380, 560, 420], fill=70)
-    gl = gl.filter(ImageFilter.GaussianBlur(120))
-    tint = Image.new("RGBA", (W, H), acc + (255,)); tint.putalpha(gl)
-    img = Image.alpha_composite(img, tint)
-    # 필름 그레인
-    grain = Image.effect_noise((W, H), 20).convert("L")
-    img.alpha_composite(Image.merge("RGBA", (grain, grain, grain, Image.new("L", (W, H), 9))))
+    lk = Image.new("L", (Wd, Hd), 0)
+    lx, ly = int(Wd * leak_xy[0]), int(Hd * leak_xy[1])
+    ImageDraw.Draw(lk).ellipse([lx - 360, ly - 360, lx + 360, ly + 360], fill=120)
+    lk = lk.filter(ImageFilter.GaussianBlur(150))
+    leak = Image.new("RGBA", (Wd, Hd), acc + (255,)); leak.putalpha(lk)
+    img = Image.alpha_composite(img, leak)
+    gl = Image.new("L", (Wd, Hd), 0); ImageDraw.Draw(gl).ellipse([-340, -420, 520, 380], fill=46)
+    gl = gl.filter(ImageFilter.GaussianBlur(130))
+    t2 = Image.new("RGBA", (Wd, Hd), acc + (255,)); t2.putalpha(gl)
+    img = Image.alpha_composite(img, t2)
+    sl = Image.new("RGBA", (Wd, Hd), (0, 0, 0, 0)); sd = ImageDraw.Draw(sl)
+    for y in range(0, Hd, 3): sd.line([(0, y), (Wd, y)], fill=(0, 0, 0, 12), width=1)
+    img.alpha_composite(sl)
+    grain = Image.effect_noise((Wd, Hd), 22).convert("L")
+    img.alpha_composite(Image.merge("RGBA", (grain, grain, grain, Image.new("L", (Wd, Hd), 10))))
     return img
 
 def spade(d, cx, cy, r, fill):
@@ -47,30 +58,29 @@ def spade(d, cx, cy, r, fill):
     d.polygon([(cx - r * 0.08, cy), (cx + r * 0.08, cy), (cx + r * 0.3, cy + r * 0.7),
                (cx - r * 0.3, cy + r * 0.7)], fill=fill)
 
-def frost(img, box, radius, acc, alpha=140):
+def frost(img, box, radius, acc, alpha=140, tab=True):
     x0, y0, x1, y1 = map(int, box)
     reg = img.crop((x0, y0, x1, y1)).filter(ImageFilter.GaussianBlur(17))
     m = Image.new("L", (x1 - x0, y1 - y0), 0)
     ImageDraw.Draw(m).rounded_rectangle([0, 0, x1 - x0 - 1, y1 - y0 - 1], radius, fill=255)
     img.paste(reg, (x0, y0), m)
     panel = Image.new("RGBA", (x1 - x0, y1 - y0), (0, 0, 0, 0))
-    pd = ImageDraw.Draw(panel)
-    pd.rounded_rectangle([0, 0, x1 - x0 - 1, y1 - y0 - 1], radius, fill=(8, 12, 22, alpha),
-                         outline=(255, 255, 255, 26), width=1)
+    ImageDraw.Draw(panel).rounded_rectangle([0, 0, x1 - x0 - 1, y1 - y0 - 1], radius,
+                                            fill=(8, 12, 22, alpha), outline=(255, 255, 255, 26), width=1)
     img.alpha_composite(panel, (x0, y0))
-    ImageDraw.Draw(img, "RGBA").line([(x0 + 26, y0), (x0 + 120, y0)], fill=acc + (255,), width=3)
+    if tab:
+        ImageDraw.Draw(img, "RGBA").rectangle([x0, y0 + 18, x0 + 4, y0 + 70], fill=acc + (255,))
 
 def vtext(text, font, fill, ls=3):
-    w = int(lsw(text, font, ls)) + 10; h = measure(text, font)[1] + 10
+    w = int(lsw(text, font, ls)) + 10; h = measure(text, font)[1] + 12
     im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    draw_ls(ImageDraw.Draw(im), (5, 3), text, font, fill, ls, "la")
+    draw_ls(ImageDraw.Draw(im), (5, 4), text, font, fill, ls, "la")
     return im.rotate(90, expand=True)
 
-def build_bg(data, TH):
+def base_bg(data, TH):
     hero = data.get("hero_image")
-    if hero and os.path.exists(hero):                       # 사진형 경로
-        im = Image.open(hero).convert("RGB")
-        s = max(W / im.width, H / im.height)
+    if hero and os.path.exists(hero):
+        im = Image.open(hero).convert("RGB"); s = max(W / im.width, H / im.height)
         im = im.resize((int(im.width * s), int(im.height * s)))
         x = (im.width - W) // 2; y = (im.height - H) // 2
         bg = im.crop((x, y, x + W, y + H)).convert("RGBA")
@@ -83,92 +93,75 @@ def build_bg(data, TH):
 def render(data, out="demo_E.png"):
     TH = theme_palette(data.get("theme", "flame_blue"))
     acc, soft, hi, lo = TH["accent"], TH["accent_soft"], TH["text_hi"], TH["text_lo"]
-    img = build_bg(data, TH); d = ImageDraw.Draw(img, "RGBA")
+    img = base_bg(data, TH); d = ImageDraw.Draw(img, "RGBA")
 
-    # 거대 고스트 스페이드(깊이감, 우하단 블리드)
     gw = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    spade(ImageDraw.Draw(gw), int(W * 0.82), int(H * 0.62), 360, acc + (26,))
+    spade(ImageDraw.Draw(gw), int(W * 0.83), int(H * 0.60), 350, acc + (24,))
     img.alpha_composite(gw.filter(ImageFilter.GaussianBlur(2)))
 
-    # 세로 사이드 레일
-    d.line([(RAILX, 250), (RAILX, 1500)], fill=acc + (120,), width=2)
-    rt = vtext(f"POKER OF DREAMS — {data.get('rail','TOURNAMENT')}", noto(15, 600), soft + (220,), ls=3)
+    d.line([(RAILX, 250), (RAILX, 1500)], fill=acc + (110,), width=2)
+    rt = vtext(f"POKER OF DREAMS — {data.get('rail','TOURNAMENT')}", oswald(15, 600), soft + (210,), ls=4)
     img.alpha_composite(rt, (RAILX - rt.width - 10, 250))
+    # 인덱스 번호(디자인 디테일)
+    d.text((RAILX - 6, 1540), data.get("idx", "01"), font=bebas(40), fill=acc + (200,), anchor="lm")
 
-    # 상단 바: 로고(좌) / 날짜(우)
-    d.text((ML, 78), "PoD", font=anton(30), fill=hi, anchor="lm")
-    draw_ls(d, (ML + 64, 78), "POKER of DREAMS", noto(16, 700), lo, ls=2, anchor="lm")
-    draw_ls(d, (MR, 78), data.get("date_short", "26.07.04 SAT"), noto(18, 600), soft, ls=3, anchor="rm")
-    d.line([(ML, 116), (MR, 116)], fill=(255, 255, 255, 40), width=1)
+    # 상단바
+    d.text((ML, 80), "PoD", font=bebas(40), fill=hi, anchor="lm")
+    draw_ls(d, (ML + 70, 80), "POKER OF DREAMS", oswald(15, 600), lo, ls=3, anchor="lm")
+    draw_ls(d, (MR, 80), data.get("date_short", "26.07.04 SAT"), oswald(17, 500), soft, ls=4, anchor="rm")
+    d.line([(ML, 120), (MR, 120)], fill=(255, 255, 255, 38), width=1)
 
-    # ===== HERO (비대칭 좌측) =====
-    # 키커
-    ky = 250
+    # HERO
+    ky = 252
     d.line([(ML, ky), (ML + 46, ky)], fill=acc, width=3)
-    draw_ls(d, (ML + 58, ky), data.get("kicker", "GUARANTEED TOURNAMENT"), noto(17, 700), acc, ls=4, anchor="lm")
-    # 이벤트명 (혼합: 블랙 + 악센트 경량)
-    ey = 278
-    ef, _ = fit_font(data["title"], lambda s: noto(s, 900), MR - ML - 200, 78, 48)
+    draw_ls(d, (ML + 58, ky), data.get("kicker", "GUARANTEED TOURNAMENT"), oswald(16, 600), acc, ls=5, anchor="lm")
+    ey = 280
+    ef, _ = fit_font(data["title"], lambda s: bebas(s), MR - ML - 170, 116, 70)
     d.text((ML, ey), data["title"], font=ef, fill=hi, anchor="la")
-    enw = measure(data["title"], ef)[0]
+    ew, eh = measure(data["title"], ef)
     if data.get("accent"):
-        d.text((ML + enw + 20, ey + measure(data["title"], ef)[1] * 0.32),
-               data["accent"], font=noto(34, 400), fill=acc, anchor="la")
-    # TOTAL GUARANTEED 라벨
-    gy = ey + measure(data["title"], ef)[1] + 44
-    draw_ls(d, (ML + 4, gy), "TOTAL GUARANTEED", noto(20, 600), lo, ls=5, anchor="la")
-    # 거대 머니 (단일 포커스)
-    my = gy + 32
-    money = "₩" + data["gtd"]
-    mf, msz = fit_font(money, anton, MR - ML, 168, 92)
-    mi, mw, mh = text_img(money, mf, (255, 255, 255), TH["gtd_lo"])
-    # 고스트 복제(깊이)
-    gh = mi.copy(); gha = gh.split()[3].point(lambda v: int(v * 0.25))
-    gh.putalpha(gha)
-    img.alpha_composite(gh, (ML + 8, int(my) + 8))
-    img.alpha_composite(mi, (ML, int(my)))
-    # 긴 룰
-    ry = my + mh + 18
-    d.line([(ML, ry), (MR, ry)], fill=(255, 255, 255, 46), width=1)
-    d.line([(ML, ry), (ML + 90, ry)], fill=acc, width=3)
+        d.text((ML + ew + 22, ey + eh * 0.30), data["accent"], font=noto(34, 500), fill=acc, anchor="la")
+    gy = ey + eh + 30
+    draw_ls(d, (ML + 3, gy), "TOTAL GUARANTEED", oswald(20, 600), lo, ls=6, anchor="la")
+    my = gy + 30
+    mf, msz = fit_font(data["gtd"], lambda s: bebas(s), MR - ML - 120, 210, 120)
+    mi, mw, mh = text_img(data["gtd"], mf, (255, 255, 255), TH["gtd_lo"])
+    ghst = mi.copy(); ghst.putalpha(mi.split()[3].point(lambda v: int(v * 0.22)))
+    img.alpha_composite(ghst, (ML + 10, int(my) + 10)); img.alpha_composite(mi, (ML, int(my)))
+    d.text((ML + mw + 18, my + mh * 0.5), "GTD", font=oswald(40, 700), fill=acc, anchor="lm")
+    ry = my + mh + 16
+    d.line([(ML, ry), (MR, ry)], fill=(255, 255, 255, 44), width=1)
+    d.line([(ML, ry), (ML + 92, ry)], fill=acc, width=3)
 
-    # ===== 프로스티드 인포 카드 =====
-    cx0, cy0, cx1, cy1 = 64, 660, W - 64, 1066
-    frost(img, (cx0, cy0, cx1, cy1), 20, acc)
-    pad = 38
-    # 카드 상단: 좌 DATE/VENUE, 우 BUY-IN
-    def kv(x, y, k, v, vw, big=34):
-        draw_ls(d, (x, y), k, noto(15, 600), acc, ls=3, anchor="la")
-        vf, _ = fit_font(v, lambda s: noto(s, 800), vw, big, 20)
+    # 프로스티드 인포 카드
+    cx0, cy0, cx1, cy1 = 64, 656, W - 64, 1066
+    frost(img, (cx0, cy0, cx1, cy1), 20, acc); pad = 40
+    def kv(x, y, k, v, vw, kf_en=True):
+        draw_ls(d, (x, y), k, oswald(15, 600), acc, ls=3, anchor="la")
+        vf, _ = fit_font(v, lambda s: noto(s, 800), vw, 33, 19)
         d.text((x, y + 22), v, font=vf, fill=hi, anchor="la")
-    kv(cx0 + pad, cy0 + pad, "DATE", data.get("date", ""), 380)
-    kv(cx0 + pad, cy0 + pad + 78, "VENUE", data.get("place", ""), 380)
-    # 우측 BUY-IN 강조
-    bx = cx0 + (cx1 - cx0) * 0.56
-    draw_ls(d, (bx, cy0 + pad), "BUY-IN", noto(15, 600), acc, ls=3, anchor="la")
-    bvf, _ = fit_font(data["buyin"], lambda s: noto(s, 900), cx1 - pad - bx, 48, 26)
-    d.text((bx, cy0 + pad + 26), data["buyin"], font=bvf, fill=hi, anchor="la")
-    # 카드 내 구분선
+    kv(cx0 + pad, cy0 + pad, "DATE", data.get("date", ""), 360)
+    kv(cx0 + pad, cy0 + pad + 78, "VENUE", data.get("place", ""), 360)
+    bx = cx0 + (cx1 - cx0) * 0.57
+    draw_ls(d, (bx, cy0 + pad), "BUY-IN", oswald(15, 600), acc, ls=3, anchor="la")
+    bvf, _ = fit_font(data["buyin"], lambda s: noto(s, 900), cx1 - pad - bx, 46, 24)
+    d.text((bx, cy0 + pad + 24), data["buyin"], font=bvf, fill=hi, anchor="la")
     midy = cy0 + 196
-    d.line([(cx0 + pad, midy), (cx1 - pad, midy)], fill=(255, 255, 255, 32), width=1)
-    # 하단 4스탯
-    stats = [s for s in data["stats"] if s[1]]
-    n = len(stats); inw = (cx1 - cx0) - pad * 2; cw = inw / n
+    d.line([(cx0 + pad, midy), (cx1 - pad, midy)], fill=(255, 255, 255, 30), width=1)
+    stats = [s for s in data["stats"] if s[1]]; n = len(stats); inw = (cx1 - cx0) - pad * 2; cw = inw / n
     for i, (lab, val) in enumerate(stats):
         sx = cx0 + pad + cw * i
-        if i: d.line([(sx, midy + 22), (sx, cy1 - 28)], fill=(255, 255, 255, 28), width=1)
-        draw_ls(d, (sx + 16, midy + 26), lab, noto(15, 600), soft, ls=2, anchor="la")
-        vf, _ = fit_font(val, lambda s: noto(s, 800), cw - 24, 32, 18)
-        d.text((sx + 16, midy + 50), val, font=vf, fill=hi, anchor="la")
+        if i: d.line([(sx, midy + 22), (sx, cy1 - 28)], fill=(255, 255, 255, 26), width=1)
+        draw_ls(d, (sx + 14, midy + 26), lab, oswald(14, 600), soft, ls=2, anchor="la")
+        vf, _ = fit_font(val, lambda s: noto(s, 800), cw - 22, 31, 17)
+        d.text((sx + 14, midy + 48), val, font=vf, fill=hi, anchor="la")
 
-    # ===== NOTICE (절제된 2단, 좌측 세로 라벨) =====
-    ny = 1110
-    nt = vtext("NOTICE", noto(15, 700), lo + (200,), ls=4)
-    img.alpha_composite(nt, (ML - 6, ny))
-    nx = ML + 34; colw = (MR - nx) / 2; yy = ny; lh = 30
-    half = (len(data["notice"]) + 1) // 2
+    # NOTICE
+    ny = 1112
+    nt = vtext("NOTICE", oswald(15, 700), lo + (200,), ls=5); img.alpha_composite(nt, (ML - 6, ny))
+    nx = ML + 34; colw = (MR - nx) / 2; lh = 30; half = (len(data["notice"]) + 1) // 2
     for ci, chunk in enumerate([data["notice"][:half], data["notice"][half:]]):
-        bx2 = nx + ci * colw; yc = yy
+        bx2 = nx + ci * colw; yc = ny
         for line in chunk:
             f = noto(16, 400)
             if measure("· " + line, f)[0] > colw - 22:
@@ -176,24 +169,22 @@ def render(data, out="demo_E.png"):
             d.text((bx2, yc), "·", font=f, fill=acc, anchor="la")
             d.text((bx2 + 16, yc), line, font=f, fill=lo, anchor="la"); yc += lh
 
-    # ===== 스폰서 / 푸터 (좌 정렬, 절제) =====
-    spy = 1560
-    d.line([(ML, spy - 16), (MR, spy - 16)], fill=(255, 255, 255, 34), width=1)
-    sp = data["sponsors"]; sx = ML
-    for lab, name in sp:
+    # 스폰서 / 푸터
+    spy = 1562
+    d.line([(ML, spy - 16), (MR, spy - 16)], fill=(255, 255, 255, 32), width=1)
+    sx = ML
+    for lab, name in data["sponsors"]:
         draw_ls(d, (sx, spy), lab, noto(13, 600), acc, ls=2, anchor="la")
         d.text((sx, spy + 20), name, font=noto(18, 700), fill=hi, anchor="la")
-        sx += measure(name, noto(18, 700))[0] + 52
-    # 푸터
-    fy = SAFE_B - 18
+        sx += measure(name, noto(18, 700))[0] + 50
+    fy = SAFE_B - 16
     draw_ls(d, (ML, fy), data["footer_name"], noto(19, 800), hi, ls=1, anchor="lm")
     d.text((MR, fy), data["footer_addr"], font=noto(17, 400), fill=lo, anchor="rm")
 
     img.convert("RGB").save(out, quality=95); print("saved", out)
 
-# 데모 데이터 (render_poster.DATA 확장)
 import render_poster as A
-DATA = dict(A.DATA, kicker="GUARANTEED TOURNAMENT", rail="DAEJEON 2026", date_short="26.07.04 SAT")
+DATA = dict(A.DATA, kicker="GUARANTEED TOURNAMENT", rail="DAEJEON 2026", date_short="26.07.04 SAT", idx="01")
 
 if __name__ == "__main__":
     t = sys.argv[1] if len(sys.argv) > 1 else "golden_luxe"
