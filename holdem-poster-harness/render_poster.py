@@ -33,6 +33,24 @@ THEMES = {
 }
 TH = THEMES["flame_blue"]
 
+# 임의 테마 → accent 색에서 팔레트 자동 유도 (20테마 지원)
+try:
+    from bg_generate import THEME_ACCENT
+except Exception:
+    THEME_ACCENT = {}
+def _mix(c, d, t): return tuple(int(c[i] * (1 - t) + d[i] * t) for i in range(3))
+def palette(acc):
+    Wt = (255, 255, 255)
+    return dict(accent=acc, accent_soft=_mix(acc, Wt, 0.45),
+                text_hi=_mix(Wt, acc, 0.05), text_lo=_mix((205, 210, 220), acc, 0.14),
+                line=_mix(tuple(int(x * 0.4) for x in acc), (44, 50, 66), 0.4),
+                title_lo=_mix(acc, Wt, 0.55), glow=tuple(int(x * 0.45) for x in acc),
+                gtd_lo=_mix(acc, Wt, 0.48))
+def theme_palette(name):
+    if name in THEMES: return THEMES[name]
+    if name in THEME_ACCENT: return palette(THEME_ACCENT[name])
+    return THEMES["flame_blue"]
+
 def noto(size, weight=400):
     f = ImageFont.truetype(NOTO, size)
     try: f.set_variation_by_axes([weight])
@@ -119,6 +137,10 @@ def build_bg(theme):
     hs = hs.filter(ImageFilter.GaussianBlur(95))
     hsc = Image.new("RGBA", (W, H), (2, 6, 14, 255)); hsc.putalpha(hs)
     bg.alpha_composite(hsc)
+    # QP8 마감: 미세 필름 그레인 (밴딩 방지·질감)
+    grain = Image.effect_noise((W, H), 22).convert("L")
+    g = Image.merge("RGBA", (grain, grain, grain, Image.new("L", (W, H), 8)))
+    bg.alpha_composite(g)
     return bg
 
 # ---------- 콘텐츠(임의) ----------
@@ -150,10 +172,35 @@ DATA = {
 def rule(d, cx, y, w, col, h=3):
     d.rounded_rectangle([cx - w / 2, y, cx + w / 2, y + h], radius=h / 2, fill=col)
 
+# ===== 디자인 디바이스 (QP7) =====
+def corner_frame(d, col, arm=52, off=6, w=3):
+    L, R, T, B = SAFE_L + off, SAFE_R - off, SAFE_T + off, SAFE_B - off
+    for x, y, sx, sy in [(L, T, 1, 1), (R, T, -1, 1), (L, B, 1, -1), (R, B, -1, -1)]:
+        d.line([(x, y), (x + sx * arm, y)], fill=col, width=w)
+        d.line([(x, y), (x, y + sy * arm)], fill=col, width=w)
+
+def suit_divider(d, cx, y, w, col):
+    g, s = 22, 11
+    d.line([(cx - w / 2, y), (cx - g, y)], fill=col, width=2)
+    d.line([(cx + g, y), (cx + w / 2, y)], fill=col, width=2)
+    d.polygon([(cx, y - s), (cx + s * 0.72, y), (cx, y + s), (cx - s * 0.72, y)], fill=col)
+
+def ribbon(d, cx, cy, w, h, fill, outline):
+    n = h * 0.42
+    x0, x1, y0, y1 = cx - w / 2, cx + w / 2, cy - h / 2, cy + h / 2
+    pts = [(x0, y0), (x1, y0), (x1 + n, cy), (x1, y1), (x0, y1), (x0 - n, cy)]
+    d.polygon(pts, fill=fill); d.line(pts + [pts[0]], fill=outline, width=2)
+    # 끝단 작은 접힘
+    d.polygon([(x0 - n, cy), (x0 - n + 8, cy - 6), (x0 - n + 8, cy + 6)], fill=outline)
+    d.polygon([(x1 + n, cy), (x1 + n - 8, cy - 6), (x1 + n - 8, cy + 6)], fill=outline)
+
 def render(data, out="demo_A.png"):
     global TH
-    TH = THEMES.get(data.get("theme"), THEMES["flame_blue"])
+    TH = theme_palette(data.get("theme","flame_blue"))
     img = build_bg(data["theme"]); d = ImageDraw.Draw(img, "RGBA")
+
+    # QP7 코너 프레임 (프리미엄 프레이밍)
+    corner_frame(d, TH["accent"] + (175,))
 
     # A0 트로피 뱃지
     by = SAFE_T + 8; bf = noto(18, 500)
@@ -186,29 +233,31 @@ def render(data, out="demo_A.png"):
         d.text((ax, ty - 40), data["accent"], font=af, fill=TH["accent"], anchor="la")
     htb = ty + thh
 
-    # A3 GTD (타이틀 직하, 밀착 lockup)
-    gy = htb - 6
-    gf, gsz = fit_font(data["gtd"], anton, CW - 220, 118, 74)
+    # A3 GTD (상금 = 머니 포커스. 크게 + 글로우로 한눈에)
+    gy = htb - 4
+    gf, gsz = fit_font(data["gtd"], anton, CW - 170, 138, 88)
     gi, gw, gh = text_img(data["gtd"], gf, (255, 255, 255), TH["gtd_lo"])
-    sf = anton(int(gsz * 0.40)); sw, _ = measure("GTD", sf)
-    tot = gw + sw + 14; x0 = CX - tot / 2
+    sf = anton(int(gsz * 0.38)); sw, _ = measure("GTD", sf)
+    tot = gw + sw + 16; x0 = CX - tot / 2
     place(img, gi, x0 + gw / 2, gy, shadow=True, glow_col=TH["glow"])
-    d.text((x0 + gw + 14, gy + gh * 0.30), "GTD", font=sf, fill=TH["accent"], anchor="lm")
-    # 히어로 구분 룰
-    rule(d, CX, gy + gh + 14, 120, TH["accent"] + (235,))
+    d.text((x0 + gw + 16, gy + gh * 0.32), "GTD", font=sf, fill=TH["accent"], anchor="lm")
+    # 히어로 구분 디바이더(다이아 모티프)
+    suit_divider(d, CX, gy + gh + 18, 150, TH["accent"] + (235,))
 
     # ===== INFO (수직 리듬 차등: 정보부는 더 촘촘) =====
     # A4 일시/장소
-    dy = gy + gh + 48
+    dy = gy + gh + 52
     draw_ls(d, (CX, dy), data["date"], noto(31, 500), TH["text_lo"], ls=1, anchor="ma")
     pf, _ = fit_font(data["place"], lambda s: noto(s, 800), CW - 80, 50, 32)
     d.text((CX, dy + 46), data["place"], font=pf, fill=TH["text_hi"], anchor="ma")
 
-    # A5 BUY-IN
-    yb = dy + 124
-    draw_ls(d, (CX, yb), data["buyin_label"], noto(24, 700), TH["accent"], ls=8, anchor="ma")
-    bf2, _ = fit_font(data["buyin"], lambda s: noto(s, 800), CW - 80, 60, 38)
-    d.text((CX, yb + 40), data["buyin"], font=bf2, fill=TH["text_hi"], anchor="ma")
+    # A5 BUY-IN (리본 배너로 강조)
+    yb = dy + 122
+    draw_ls(d, (CX, yb), data["buyin_label"], noto(22, 700), TH["accent"], ls=9, anchor="ma")
+    bf2, _ = fit_font(data["buyin"], lambda s: noto(s, 800), CW - 300, 46, 30)
+    rcy = yb + 64; rbw = measure(data["buyin"], bf2)[0] + 76; rbh = measure(data["buyin"], bf2)[1] + 30
+    ribbon(d, CX, rcy, min(rbw, CW - 120), rbh, fill=TH["glow"] + (236,), outline=TH["accent"] + (255,))
+    d.text((CX, rcy), data["buyin"], font=bf2, fill=TH["text_hi"], anchor="mm")
 
     # A6 스탯 4열 — 가벼운 헤어라인 패널(딱딱함 완화)
     stats = [s for s in data["stats"] if s[1]]
