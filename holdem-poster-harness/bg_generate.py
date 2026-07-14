@@ -186,4 +186,4 @@ if __name__ == "__main__":
             print("saved", name)
     else:
         out = sys.argv[2] if len(sys.argv) > 2 else f"assets/bg/{arg}.jpg"
-        GENERATORS[arg]().save(out, quality=90); print("saved", out)
+        GENERATORS[arg](7).save(out, quality=90); print("saved", out)
