@@ -19,6 +19,7 @@ Codex QC 레이어 — 까다로운 규격 검증 리뷰어.
 from PIL import Image, ImageDraw
 
 BOXES = []
+PANELS = []        # frost 패널 경계 — 서로 다른 패널의 텍스트는 R4(크기 일관성) 비교 대상이 아님
 ENABLED = True
 CANVAS = None      # run()이 지정한 메인 캔버스 크기 — 이 크기의 이미지에 그린 것만 기록
                    # (text_img/vtext의 내부 스크래치 캔버스 드로잉을 제외하기 위함)
@@ -65,6 +66,12 @@ def load():
         return out, w, h
     rp.text_img = ti
     import render_editorial as EA
+    _ofr = EA.frost
+    def fr(img, box, radius, acc, alpha=140, tab=True):
+        if ENABLED:
+            PANELS.append([float(v) for v in box])
+        return _ofr(img, box, radius, acc, alpha, tab)
+    EA.frost = fr
     _ovt = EA.vtext
     def vt(text, font, fill, ls=3):
         out = _ovt(text, font, fill, ls)
@@ -117,6 +124,13 @@ def _iou(a, b):
     ua = (a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - inter
     return inter / max(ua, 1e-6)
 
+def _panel_of(b):
+    cx = (b[0] + b[2]) / 2; cy = (b[1] + b[3]) / 2
+    for i, p in enumerate(PANELS):
+        if p[0] <= cx <= p[2] and p[1] <= cy <= p[3]:
+            return i
+    return -1
+
 def check(boxes, W, H, tol=1.5, depth=3.0):
     sl, st = round(W * 0.06), round(H * 0.03)
     sr, sb = W - sl, H - st
@@ -151,6 +165,8 @@ def check(boxes, W, H, tol=1.5, depth=3.0):
             hgap = max(A[0], C[0]) - min(A[2], C[2])
             if hgap <= 0 or hgap > 200:
                 continue
+            if _panel_of(A) != _panel_of(C):     # 다른 패널(컨테이너)의 텍스트는 비교 제외
+                continue
             r = max(fa, fc) / min(fa, fc)
             if 1.04 < r < 1.75:
                 v.append(f"R4 SIZE    '{a['t']}'({fa:g}) × '{c['t']}'({fc:g}) 같은 행 크기 불일치")
@@ -160,6 +176,7 @@ def run(name, W, H, fn):
     global CANVAS
     CANVAS = (W, H)
     BOXES.clear()
+    PANELS.clear()
     fn()
     snap = list(BOXES)
     v = check(snap, W, H)

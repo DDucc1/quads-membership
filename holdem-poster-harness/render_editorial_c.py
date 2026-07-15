@@ -16,7 +16,7 @@ DATA = dict(
     venue_name="대구 ANPT 스타디움", venue_addr="대구광역시 북구 고성북로 10길 45",
     sponsors=[("주관사", "POKER OF DREAMS"), ("협력사", "SEEDKET · ON&ON"), ("후원사", "MOXSYS")],
     cols=["DATE", "TIME", "EVENT", "BUY-IN", "GTD", "ENTRY", "STACK", "LV", "CLOSE"],
-    prop=[0.105, 0.075, 0.245, 0.135, 0.13, 0.075, 0.085, 0.06, 0.09],
+    prop=[0.105, 0.075, 0.225, 0.155, 0.13, 0.075, 0.085, 0.06, 0.09],
     rows=[
         ("05.27 WED", "13:00", "#1 OPENING DEEP", "1 TICKET / 30FP", "20,000,000", "200++", "30,000", "20", "14LV"),
         ("05.27 WED", "19:00", "#2 NIGHT TURBO", "1 TICKET / 20FP", "10,000,000", "150++", "25,000", "18", "12LV"),
@@ -73,7 +73,7 @@ def render(data, out="demo_EC.png"):
     hrow = 44
     hy = gy0 + 16
     for c, cx in zip(data["cols"], cen):
-        draw_ls(d, (cx, hy + hrow / 2), c, oswald(14, 700), acc, ls=1, anchor="mm")
+        draw_ls(d, (cx, hy + hrow / 2), c, oswald(15, 700), acc, ls=1, anchor="mm")
     d.line([(inx0, hy + hrow), (inx1, hy + hrow)], fill=acc + (200,), width=2)
     rows = data["rows"]; ry0 = hy + hrow + 4
     rh = (gy1 - ry0 - 14) / len(rows)
@@ -83,7 +83,7 @@ def render(data, out="demo_EC.png"):
         for j, v in enumerate(row):
             if j == 0: items.append((v.split()[0], gw_ * data["prop"][0] - 6))
             else: items.append((v, gw_ * data["prop"][j] - 6))
-    gf_c, _ = fit_common(items, lambda s: oswald(s, 700), 14, 9)
+    gf_c, _ = fit_common(items, lambda s: oswald(s, 700), 19, 12)   # 대회사 포스터 기준 셀 크기 상향
     gf_bold = oswald(gf_c.size, 700); gf_reg = oswald(gf_c.size, 500)
     prev_date = None
     for i, row in enumerate(rows):
@@ -96,7 +96,7 @@ def render(data, out="demo_EC.png"):
             if j == 0:
                 if not new_grp: continue
                 d.text((cx, yy + rh / 2), v.split()[0], font=gf_bold, fill=hi, anchor="mm")
-                d.text((cx, yy + rh / 2 + 20), v.split()[1], font=oswald(11, 500), fill=soft, anchor="mm")
+                d.text((cx, yy + rh / 2 + 22), v.split()[1], font=oswald(12, 500), fill=soft, anchor="mm")
             elif j == 2:
                 d.text((cx, yy + rh / 2), v, font=gf_bold, fill=hi, anchor="mm")
             elif j == 4:
