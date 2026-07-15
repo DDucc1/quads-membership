@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="포스터 스튜디오 — 특별 이벤트: 풀 입력 후 시안 3종 비교 선택 (서비스 맥락 데모 3/4)">
+<title>포스터 스튜디오 — 특별 이벤트 (데모 3/4)</title>
+<style>
+:root{--bg:#F2F3F0;--surface:#FFFFFF;--surface2:#F7F8F5;--border:#DDE1DA;--ink:#15181A;--muted:#5B6461;
+ --accent:#155A4F;--accent2:#8F6218;--good:#2E7D57}
+@media (prefers-color-scheme:dark){:root{--bg:#0D1210;--surface:#151B18;--surface2:#111614;--border:#28302B;
+ --ink:#E8ECE8;--muted:#93A099;--accent:#4FB8A6;--accent2:#DFAF56;--good:#4FB98A}}
+:root[data-theme="dark"]{--bg:#0D1210;--surface:#151B18;--surface2:#111614;--border:#28302B;--ink:#E8ECE8;--muted:#93A099;--accent:#4FB8A6;--accent2:#DFAF56;--good:#4FB98A}
+:root[data-theme="light"]{--bg:#F2F3F0;--surface:#FFFFFF;--surface2:#F7F8F5;--border:#DDE1DA;--ink:#15181A;--muted:#5B6461;--accent:#155A4F;--accent2:#8F6218;--good:#2E7D57}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.6;
+ font-family:system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif}
+.wrap{max-width:1020px;margin:0 auto;padding:0 20px 90px}
+header.top{border-bottom:1px solid var(--border);padding:26px 0 20px;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
+.brand{font-weight:800;letter-spacing:.02em}
+.brand small{display:block;font-weight:500;color:var(--muted);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase}
+.top .status{font-size:.8rem;color:var(--muted)}
+h1{font-size:clamp(1.35rem,3.6vw,1.85rem);margin:30px 0 4px;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--muted);margin:0 0 20px;font-size:.95rem;max-width:62ch}
+.ctx{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.1em;color:var(--accent);
+ border:1px solid var(--accent);border-radius:6px;padding:2px 9px;margin-bottom:10px;text-transform:uppercase}
+
+.stepper{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:20px 0 24px}
+.stp{border-top:3px solid var(--border);padding-top:8px;font-size:.72rem;color:var(--muted)}
+.stp b{display:block;font-size:.8rem;color:var(--muted);font-weight:650}
+.stp.on{border-top-color:var(--accent)}
+.stp.on b{color:var(--ink)}
+.stp.done{border-top-color:color-mix(in srgb,var(--accent) 45%,var(--border))}
+@media(max-width:640px){.stp{font-size:.6rem}.stp b{font-size:.66rem}}
+
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;min-height:400px}
+.panel h2{margin:0 0 4px;font-size:1.2rem}
+.panel .desc{color:var(--muted);margin:0 0 22px;font-size:.92rem}
+.meta{display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted);margin-bottom:10px}
+.meta .n{font-weight:700;letter-spacing:.08em;color:var(--accent)}
+.auto{margin-top:20px;padding:12px 16px;border-left:3px solid var(--accent);background:var(--surface2);
+ border-radius:0 8px 8px 0;font-size:.85rem;color:var(--muted)}
+.auto b{color:var(--accent);font-weight:700}
+
+label.f{display:block;margin:14px 0 5px;font-size:.8rem;font-weight:700;color:var(--muted);letter-spacing:.02em}
+input[type=text],textarea{width:100%;font:inherit;background:var(--surface2);color:var(--ink);
+ border:1px solid var(--border);border-radius:9px;padding:11px 14px}
+input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.row2{grid-template-columns:1fr}}
+.hint{font-size:.77rem;color:var(--muted);margin-top:5px}
+
+/* generating */
+.gen{display:grid;place-items:center;min-height:280px;color:var(--muted);font-size:.92rem;text-align:center}
+.gen .bar{width:220px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin:16px auto 0}
+.gen .bar i{display:block;height:100%;width:30%;background:var(--accent);border-radius:2px;animation:slide 1.1s infinite ease-in-out}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(340%)}}
+
+/* variant cards */
+.vars{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:720px){.vars{grid-template-columns:1fr}}
+.vc{border:1.5px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;background:var(--surface2);font:inherit;color:var(--ink);text-align:left}
+.vc[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.vc .nm{font-weight:700;font-size:.88rem;display:block;margin-top:10px}
+.vc .mood{font-size:.74rem;color:var(--muted)}
+.vc .qc{display:inline-block;font-size:.68rem;color:var(--good);font-weight:700;margin-top:6px}
+
+/* tune pills */
+.tune{display:grid;gap:16px;margin-top:6px}
+.tg .tq{font-size:.85rem;font-weight:700;margin-bottom:8px}
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{border:1.5px solid var(--border);border-radius:10px;padding:9px 16px;cursor:pointer;background:var(--surface2);font:inherit;color:var(--ink);font-size:.86rem}
+.pill[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);font-weight:700}
+
+.fingrid{display:grid;grid-template-columns:250px 1fr;gap:22px;align-items:start}
+@media(max-width:640px){.fingrid{grid-template-columns:1fr}}
+.kv{display:grid;grid-template-columns:110px 1fr;gap:5px 12px;font-size:.9rem}
+.kv .k{color:var(--muted)}
+.qcline{margin-top:16px;font-size:.84rem;color:var(--good);font-weight:650}
+.editnote{margin-top:14px;padding:13px 16px;border-radius:10px;background:var(--surface2);
+ border:1px solid var(--border);font-size:.87rem;color:var(--muted)}
+.editnote b{color:var(--ink)}
+
+.navbtns{display:flex;justify-content:space-between;margin-top:20px}
+button.nv{font:inherit;font-weight:700;border:0;border-radius:9px;padding:12px 28px;cursor:pointer}
+#nextb{background:var(--accent);color:#fff}
+#nextb[disabled]{opacity:.5;cursor:default}
+#prevb{background:transparent;color:var(--muted);border:1px solid var(--border)}
+#prevb[disabled]{opacity:.35;cursor:default}
+
+/* poster mock */
+.poster{aspect-ratio:4/5;border-radius:10px;overflow:hidden;position:relative;color:#fff;
+ display:flex;flex-direction:column;padding:7% 8%;border:1px solid rgba(0,0,0,.25)}
+.poster .glow{position:absolute;inset:0;pointer-events:none;
+ background:radial-gradient(90% 55% at 50% 0%,rgba(255,255,255,.14),transparent 70%)}
+.poster .wm{position:absolute;right:-12%;bottom:-8%;width:65%;opacity:.1;pointer-events:none}
+.poster .brandrow{display:flex;align-items:center;gap:7px;font-size:.6rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;opacity:.92}
+.poster .brandrow svg{width:14px;height:14px}
+.poster .ttl{margin-top:auto;font-weight:800;line-height:1.04;font-family:"Arial Narrow","Noto Sans KR",sans-serif;
+ text-transform:uppercase;letter-spacing:.03em;font-size:1.35rem;text-wrap:balance}
+.poster.big-title .ttl{font-size:1.6rem}
+.poster .sub2{font-size:.56rem;opacity:.95;letter-spacing:.14em;text-transform:uppercase;margin-top:5px}
+.poster .gtdband{margin-top:10px;padding:7px 0;text-align:center;border-top:1px solid rgba(255,255,255,.3);border-bottom:1px solid rgba(255,255,255,.3);
+ font-weight:800;font-size:1rem;letter-spacing:.06em;font-variant-numeric:tabular-nums}
+.poster.big-gtd .gtdband{font-size:1.3rem}
+.poster .gtdband small{display:block;font-size:.5rem;font-weight:600;letter-spacing:.22em;opacity:.7}
+.poster .stats{display:flex;gap:5px;margin-top:9px}
+.poster .st{flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);border-radius:6px;padding:5px 3px;text-align:center}
+.poster .st b{display:block;font-size:.62rem;font-variant-numeric:tabular-nums}
+.poster .st span{font-size:.46rem;opacity:.75;letter-spacing:.1em;text-transform:uppercase}
+.poster .foot{margin-top:9px;font-size:.46rem;opacity:.6;letter-spacing:.12em;text-transform:uppercase}
+/* layout variants */
+.poster.v-center{text-align:center}
+.poster.v-center .brandrow{justify-content:center}
+.poster.v-side{padding-left:16%}
+.poster.v-side .rail{position:absolute;left:0;top:0;bottom:0;width:9%;background:rgba(255,255,255,.08);border-right:1px solid rgba(255,255,255,.2)}
+.poster.v-side .rail span{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(180deg);writing-mode:vertical-rl;
+ font-size:.5rem;letter-spacing:.3em;text-transform:uppercase;opacity:.7;white-space:nowrap}
+button:focus-visible,.vc:focus-visible,.pill:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header class="top">
+  <div class="brand">POSTER STUDIO<small>Tournament Poster Service</small></div>
+  <div class="status">서비스 맥락 데모 3/4 · 특별 이벤트</div>
+</header>
+
+<span class="ctx">맥락 3 — 월 1~2회, 힘줘야 하는 대회</span>
+<h1>입력은 한 번, 시안은 세 개 — 고르기만 하세요</h1>
+<p class="sub">특별 이벤트는 평소보다 공을 들일 가치가 있습니다. 대회 정보를 입력하면 하우스 스타일 안에서 구도가 다른 시안 3종이 동시에 생성됩니다. 셋 다 규격 검수를 통과한 상태로 제시됩니다.</p>
+
+<div class="stepper" id="stepper">
+  <div class="stp"><b>01 대회 정보</b>풀 입력</div>
+  <div class="stp"><b>02 시안 생성</b>자동</div>
+  <div class="stp"><b>03 선택·미세조정</b>비교</div>
+  <div class="stp"><b>04 확인·발행</b>요약</div>
+</div>
+
+<div id="steps">
+
+<section class="panel" data-step="0">
+  <div class="meta"><span class="n">STEP 01 — 대회 정보</span><span>예상 소요 90초</span></div>
+  <h2>이번 이벤트를 알려주세요</h2>
+  <p class="desc">특별 이벤트는 정보를 모두 새로 입력합니다. 블라인드 구조·매장 정보는 하우스 설정에서 자동으로 붙습니다.</p>
+  <div class="row2">
+    <div><label class="f">대회명</label><input type="text" id="fTitle" value="여름 챔피언십"></div>
+    <div><label class="f">부제 (선택)</label><input type="text" id="fSub" value="Summer Championship 2026"></div>
+  </div>
+  <div class="row2">
+    <div><label class="f">날짜</label><input type="text" id="fDate" value="8월 2일 (일)"></div>
+    <div><label class="f">시작 시간</label><input type="text" id="fTime" value="17:00"></div>
+  </div>
+  <div class="row2">
+    <div><label class="f">개런티 (GTD)</label><input type="text" id="fGtd" value="2,000만"></div>
+    <div><label class="f">바이인</label><input type="text" id="fBuyin" value="15만"></div>
+  </div>
+  <label class="f">강조하고 싶은 점 (선택)</label>
+  <input type="text" id="fNote" value="역대 최대 개런티, 사전 등록 시 스택 추가">
+  <div class="auto"><b>자동 처리</b> 블라인드 구조표, 스타팅 스택, 매장 정보·하우스 스타일은 설정값이 자동 적용됩니다.</div>
+</section>
+
+<section class="panel" data-step="1" hidden>
+  <div class="meta"><span class="n">STEP 02 — 시안 생성</span><span>자동</span></div>
+  <div class="gen" id="gen">
+    <div>
+      <div id="genmsg">하우스 스타일 안에서 구도 3종을 구성하고 있습니다</div>
+      <div class="bar"><i></i></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" data-step="2" hidden>
+  <div class="meta"><span class="n">STEP 03 — 선택·미세조정</span><span>비교 후 선택</span></div>
+  <h2>마음에 드는 시안을 고르세요</h2>
+  <p class="desc">셋 모두 우리 매장 하우스 스타일이 적용되어 있고, 규격 검수를 통과했습니다. 구도만 다릅니다.</p>
+  <div class="vars" id="vars"></div>
+  <div class="tune" style="margin-top:22px">
+    <div class="tg">
+      <div class="tq">무엇을 가장 크게 보여줄까요?</div>
+      <div class="pills" data-q="emph">
+        <button class="pill" data-v="gtd" aria-pressed="true">개런티 금액</button>
+        <button class="pill" data-v="title" aria-pressed="false">대회 이름</button>
+      </div>
+    </div>
+  </div>
+  <div class="auto"><b>유연 수정</b> 시안이 모두 마음에 들지 않으면 "다시 생성"으로 새 구도를 받거나, 발행 후에도 부분 수정(데모 4)으로 언제든 고칠 수 있습니다.</div>
+</section>
+
+<section class="panel" data-step="3" hidden>
+  <div class="meta"><span class="n">STEP 04 — 확인·발행</span><span>요약</span></div>
+  <h2>이대로 발행할까요?</h2>
+  <p class="desc">선택하신 시안과 입력 내용입니다.</p>
+  <div class="fingrid">
+    <div class="poster" id="pvFinal"></div>
+    <div>
+      <div class="kv" id="finKv"></div>
+      <p class="qcline">규격 검수(캔버스·세이프존·겹침·크기 일관성) 통과</p>
+      <div class="editnote"><b>발행 후 수정 가능.</b> 오타·시간 변경은 부분 수정으로 해당 요소만 바꿔 재발행합니다. 원본 시안 3종은 보관되어 나중에 다른 구도로 갈아탈 수 있습니다.</div>
+    </div>
+  </div>
+</section>
+
+<div class="navbtns">
+  <button class="nv" id="prevb" disabled>이전</button>
+  <button class="nv" id="nextb">시안 3종 생성</button>
+</div>
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var SP='<svg viewBox="0 0 38 38" aria-hidden="true"><path d="M19 4C13 12 7 15 7 21c0 4 3 7 7 7 1.6 0 3.1-.5 4-1.4V30c0 2-1 3.4-3 4h8c-2-.6-3-2-3-4v-3.4c.9.9 2.4 1.4 4 1.4 4 0 7-3 7-7 0-6-6-9-12-17z" fill="#e8b45a"/></svg>';
+var VARIANTS=[
+ {id:"v1",nm:"클래식 스플릿",mood:"비대칭 · 정보 정돈형 (V1)",cls:"",g1:"#1c060a",g2:"#6e1424",ac:"#e8b45a"},
+ {id:"v3",nm:"센터 스테이지",mood:"중앙 대칭 · 무대형 (V3)",cls:"v-center",g1:"#2a0a10",g2:"#8a1a2e",ac:"#f0c06a"},
+ {id:"v4",nm:"사이드바",mood:"세로 레일 · 에디토리얼 (V4)",cls:"v-side",g1:"#14040c",g2:"#521026",ac:"#e8b45a"}
+];
+var d={},sel=VARIANTS[0],emph="gtd";
+var cur=0,N=4;
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+function readForm(){
+ d={title:val("fTitle"),sub:val("fSub"),date:val("fDate"),time:val("fTime"),gtd:val("fGtd"),buyin:val("fBuyin"),note:val("fNote")};
+}
+function val(id){return document.getElementById(id).value;}
+function posterHTML(v){
+ return '<div class="glow"></div>'
+  +'<svg class="wm" viewBox="0 0 38 38" aria-hidden="true"><path d="M19 4C13 12 7 15 7 21c0 4 3 7 7 7 1.6 0 3.1-.5 4-1.4V30c0 2-1 3.4-3 4h8c-2-.6-3-2-3-4v-3.4c.9.9 2.4 1.4 4 1.4 4 0 7-3 7-7 0-6-6-9-12-17z" fill="'+v.ac+'"/></svg>'
+  +(v.cls==="v-side"?'<div class="rail"><span>'+esc(d.sub||"Special Event")+'</span></div>':"")
+  +'<div class="brandrow">'+SP+'<span>블러프 홀덤펍</span></div>'
+  +'<div class="ttl">'+esc(d.title)+'</div>'
+  +(v.cls!=="v-side"?'<div class="sub2" style="color:'+v.ac+'">'+esc(d.sub)+'</div>':"")
+  +'<div class="gtdband" style="color:'+v.ac+'"><small>Guaranteed Prize</small>'+esc(d.gtd)+'</div>'
+  +'<div class="stats">'
+  +'<div class="st"><b>'+esc(d.date)+'</b><span>Date</span></div>'
+  +'<div class="st"><b>'+esc(d.time)+'</b><span>Start</span></div>'
+  +'<div class="st"><b>'+esc(d.buyin)+'</b><span>Buy-in</span></div>'
+  +'</div>'
+  +'<div class="foot">'+esc(d.note)+'</div>';
+}
+function applyPoster(el,v){
+ el.className="poster "+v.cls+(emph==="gtd"?" big-gtd":" big-title");
+ el.style.background="linear-gradient(150deg,"+v.g1+" 10%,"+v.g2+" 90%)";
+ el.innerHTML=posterHTML(v);
+}
+function buildVars(){
+ var box=document.getElementById("vars");box.innerHTML="";
+ VARIANTS.forEach(function(v,i){
+  var b=document.createElement("button");b.className="vc";b.setAttribute("aria-pressed",v===sel?"true":"false");
+  var p=document.createElement("div");applyPoster(p,v);
+  b.appendChild(p);
+  var t=document.createElement("span");t.innerHTML='<span class="nm">'+v.nm+'</span><span class="mood">'+v.mood+'</span><span class="qc">규격 검수 통과</span>';
+  b.appendChild(t);
+  b.addEventListener("click",function(){
+   sel=v;
+   Array.prototype.forEach.call(box.children,function(c){c.setAttribute("aria-pressed","false");});
+   b.setAttribute("aria-pressed","true");
+  });
+  box.appendChild(b);
+ });
+}
+document.querySelectorAll(".pills[data-q=emph] .pill").forEach(function(b){
+ b.addEventListener("click",function(){
+  document.querySelectorAll(".pills[data-q=emph] .pill").forEach(function(c){c.setAttribute("aria-pressed","false");});
+  b.setAttribute("aria-pressed","true");emph=b.dataset.v;buildVars();
+ });
+});
+
+var steps=document.querySelectorAll("#steps .panel"),stps=document.querySelectorAll("#stepper .stp");
+var nextb=document.getElementById("nextb"),prevb=document.getElementById("prevb");
+function show(i){
+ cur=i;
+ steps.forEach(function(s,j){s.hidden=j!==i;});
+ stps.forEach(function(s,j){s.className="stp"+(j===i?" on":j<i?" done":"");});
+ prevb.disabled=i===0;
+ nextb.disabled=false;
+ nextb.textContent=["시안 3종 생성","생성 중","이 시안으로 진행","발행"][i];
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+nextb.addEventListener("click",function(){
+ if(cur===0){
+  readForm();show(1);nextb.disabled=true;
+  var msgs=["하우스 스타일 안에서 구도 3종을 구성하고 있습니다","규격 검수를 실행하고 있습니다 (R1–R4)","통과한 시안만 정렬하고 있습니다"];
+  var mi=0,el=document.getElementById("genmsg");
+  var iv=setInterval(function(){
+   mi++;
+   if(mi<msgs.length)el.textContent=msgs[mi];
+   else{clearInterval(iv);buildVars();show(2);}
+  },900);
+ }
+ else if(cur===2){
+  applyPoster(document.getElementById("pvFinal"),sel);
+  document.getElementById("finKv").innerHTML=
+   '<span class="k">대회</span><span>'+esc(d.title)+" — "+esc(d.sub)+'</span>'
+  +'<span class="k">일시</span><span>'+esc(d.date)+" "+esc(d.time)+'</span>'
+  +'<span class="k">GTD / 바이인</span><span>'+esc(d.gtd)+" / "+esc(d.buyin)+'</span>'
+  +'<span class="k">시안</span><span>'+sel.nm+" · "+(emph==="gtd"?"개런티 강조":"대회명 강조")+'</span>'
+  +'<span class="k">채널</span><span>인스타 피드·스토리, 카카오톡 공지</span>';
+  show(3);
+ }
+ else if(cur===3){nextb.textContent="발행됨 — 채널별 이미지 발송";nextb.disabled=true;}
+});
+prevb.addEventListener("click",function(){if(cur>0)show(cur===2?0:cur-1);});
+show(0);
+})();
+</script>
+</body>
+</html>
