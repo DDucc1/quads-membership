@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="포스터 스튜디오 — 홀덤펍 포스터 서비스 통합 앱 프로토타입">
+<title>포스터 스튜디오</title>
+<style>
+/* ── tokens: 딥 차콜 + 골드, 포스터가 주인공인 다크 스튜디오 ── */
+:root{
+ --bg:#131211;--bg2:#181614;--panel:#1D1B18;--panel2:#242119;--hover:#282521;
+ --border:#2E2B26;--border2:#3A362F;
+ --ink:#EFEAE1;--muted:#9B948A;--faint:#6E6960;
+ --gold:#D9A94C;--gold2:#F0C878;--gold-dim:#8F6F35;
+ --good:#5FBE8B;--danger:#E07070;
+ --r:12px;--r-sm:8px;
+ --ease:cubic-bezier(.22,.61,.36,1)
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.55;
+ font-family:system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+ -webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,select{font:inherit}
+
+/* ── app shell ── */
+.shell{max-width:1200px;margin:0 auto;padding:0 24px 60px}
+.topbar{display:flex;align-items:center;gap:14px;padding:18px 0;border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.16em;font-size:.92rem}
+.logo svg{width:22px;height:22px}
+.logo small{color:var(--faint);font-weight:500;letter-spacing:.08em;font-size:.68rem;margin-top:2px}
+.topbar .sp{flex:1}
+.tbtn{padding:9px 16px;border-radius:var(--r-sm);font-size:.86rem;font-weight:600;color:var(--muted);
+ transition:color .15s,background .15s}
+.tbtn:hover{color:var(--ink);background:var(--panel2)}
+.tbtn.primary{background:var(--gold);color:#1A1508;font-weight:700;padding:9px 20px}
+.tbtn.primary:hover{background:var(--gold2)}
+
+/* ── views ── */
+.view{display:none;animation:vin .28s var(--ease)}
+.view.on{display:block}
+@keyframes vin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ── home ── */
+.homehead{display:flex;align-items:baseline;gap:12px;margin:30px 0 6px}
+.homehead h1{font-size:1.25rem;margin:0;letter-spacing:-.01em}
+.homehead .cnt{color:var(--faint);font-size:.85rem;font-variant-numeric:tabular-nums}
+.nudge{display:flex;align-items:center;gap:12px;margin:14px 0 22px;padding:13px 18px;
+ background:linear-gradient(90deg,color-mix(in srgb,var(--gold) 12%,var(--panel)),var(--panel));
+ border:1px solid var(--border2);border-radius:var(--r);font-size:.88rem}
+.nudge b{color:var(--gold2);font-weight:700}
+.nudge .go{margin-left:auto;white-space:nowrap;color:var(--gold);font-weight:700;font-size:.84rem;
+ padding:7px 14px;border:1px solid var(--gold-dim);border-radius:var(--r-sm);transition:background .15s}
+.nudge .go:hover{background:color-mix(in srgb,var(--gold) 14%,transparent)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:18px}
+.pcard{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;
+ transition:transform .2s var(--ease),border-color .2s;position:relative}
+.pcard:hover{transform:translateY(-3px);border-color:var(--border2)}
+.pcard .thumb{position:relative}
+.pcard .acts{position:absolute;inset:0;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;
+ background:rgba(12,10,8,.72);opacity:0;transition:opacity .18s;backdrop-filter:blur(2px)}
+.pcard:hover .acts,.pcard:focus-within .acts{opacity:1}
+.acts button{width:132px;padding:9px 0;border-radius:var(--r-sm);font-size:.82rem;font-weight:700;
+ background:var(--gold);color:#1A1508;transition:background .15s}
+.acts button.ghost{background:transparent;color:var(--ink);border:1px solid var(--border2)}
+.acts button:hover{background:var(--gold2)}
+.acts button.ghost:hover{background:var(--hover)}
+.pcard .info{padding:11px 13px 12px}
+.pcard .nm{font-size:.86rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcard .mt{display:flex;gap:7px;align-items:center;font-size:.72rem;color:var(--faint);margin-top:3px}
+.badge{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--good)}
+.badge.draft{background:var(--faint)}
+.pcard.newcard{border-style:dashed;background:transparent;display:grid;place-items:center;min-height:100%;
+ color:var(--faint);transition:color .15s,border-color .15s;cursor:pointer}
+.pcard.newcard:hover{color:var(--gold);border-color:var(--gold-dim);transform:none}
+.pcard.newcard .plus{font-size:1.7rem;font-weight:300;line-height:1}
+.pcard.newcard span{font-size:.84rem;font-weight:600;margin-top:6px;display:block}
+
+/* ── editor ── */
+.edwrap{display:grid;grid-template-columns:340px minmax(0,1fr);gap:26px;margin-top:24px;align-items:start}
+@media(max-width:860px){.edwrap{grid-template-columns:1fr}}
+.edhead{display:flex;align-items:center;gap:10px;margin:22px 0 0}
+.back{color:var(--muted);font-size:.86rem;padding:7px 12px;border-radius:var(--r-sm);transition:background .15s,color .15s}
+.back:hover{background:var(--panel2);color:var(--ink)}
+.edhead .ttl{font-weight:700;font-size:1.02rem}
+.edhead .sub{color:var(--faint);font-size:.8rem}
+
+.form{display:flex;flex-direction:column;gap:2px}
+.fld{padding:10px 12px;border-radius:var(--r-sm);transition:background .15s}
+.fld:focus-within{background:var(--panel)}
+.fld label{display:block;font-size:.7rem;font-weight:700;letter-spacing:.06em;color:var(--faint);margin-bottom:4px;text-transform:uppercase}
+.fld input{width:100%;background:transparent;border:0;border-bottom:1px solid var(--border);
+ color:var(--ink);padding:4px 0 7px;font-size:.95rem;transition:border-color .15s}
+.fld input:focus{outline:none;border-bottom-color:var(--gold)}
+.fld input::placeholder{color:var(--faint)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.fnote{font-size:.74rem;color:var(--faint);padding:8px 12px 0}
+.fnote b{color:var(--muted);font-weight:600}
+
+.pubrow{display:flex;gap:10px;margin-top:20px;padding:0 12px}
+.pub{flex:1;padding:13px 0;border-radius:var(--r-sm);background:var(--gold);color:#1A1508;font-weight:800;
+ font-size:.95rem;letter-spacing:.02em;transition:background .15s,opacity .15s}
+.pub:hover{background:var(--gold2)}
+.pub[disabled]{opacity:.55;cursor:default}
+.pub.done{background:var(--good);color:#0B1A12}
+
+/* preview side */
+.pvside{display:flex;flex-direction:column;gap:14px;min-width:0}
+.stylerow{display:flex;gap:10px}
+.styleth{width:74px;border-radius:var(--r-sm);overflow:hidden;border:2px solid var(--border);
+ transition:border-color .15s,transform .15s;padding:0;position:relative}
+.styleth:hover{transform:translateY(-2px)}
+.styleth[aria-pressed="true"]{border-color:var(--gold)}
+.styleth .poster{border-radius:0;pointer-events:none}
+.styleth .snm{position:absolute;left:0;right:0;bottom:0;font-size:.58rem;font-weight:700;text-align:center;
+ padding:3px 0;background:rgba(10,8,6,.75);color:var(--ink);letter-spacing:.04em}
+.pvframe{position:relative;max-width:430px}
+.pvframe .poster{box-shadow:0 24px 60px -18px rgba(0,0,0,.65)}
+.qcsweep{position:absolute;inset:0;border-radius:14px;overflow:hidden;pointer-events:none;opacity:0;transition:opacity .2s}
+.qcsweep.on{opacity:1}
+.qcsweep .line{position:absolute;left:0;right:0;height:2px;background:var(--gold2);
+ box-shadow:0 0 18px 4px color-mix(in srgb,var(--gold2) 55%,transparent);animation:sweep 1s var(--ease)}
+@keyframes sweep{from{top:0}to{top:100%}}
+.pvhint{font-size:.75rem;color:var(--faint)}
+.pvhint b{color:var(--muted);font-weight:600}
+
+/* ── poster ── */
+.poster{aspect-ratio:4/5;border-radius:14px;overflow:hidden;position:relative;color:#fff;
+ display:flex;flex-direction:column;padding:7.5% 8.5%;isolation:isolate}
+.poster::before{content:"";position:absolute;inset:0;z-index:-1;
+ background:
+  radial-gradient(120% 70% at 78% -8%,var(--p-hi) 0%,transparent 55%),
+  radial-gradient(140% 90% at 10% 108%,rgba(0,0,0,.55),transparent 60%),
+  linear-gradient(158deg,var(--p-g1) 12%,var(--p-g2) 88%)}
+.poster::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+ background:radial-gradient(95% 95% at 50% 45%,transparent 55%,rgba(0,0,0,.4) 100%)}
+.poster .wm{position:absolute;z-index:-1;right:-14%;bottom:-9%;width:68%;opacity:.09}
+.poster .brandrow{display:flex;align-items:center;gap:8px;font-size:.6rem;font-weight:700;
+ letter-spacing:.26em;text-transform:uppercase;opacity:.9}
+.poster .brandrow svg{width:15px;height:15px;flex:none}
+.poster .brandrow::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.35),transparent)}
+.poster .datechip{margin-top:14px;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--p-ac);font-weight:700}
+.poster .ttl{font-weight:800;line-height:1.02;font-family:"Arial Narrow",system-ui,"Noto Sans KR",sans-serif;
+ text-transform:uppercase;letter-spacing:.02em;font-size:2rem;margin-top:6px;text-wrap:balance;
+ text-shadow:0 2px 14px rgba(0,0,0,.4)}
+.poster .gtd{margin-top:auto;padding:12px 0 10px;text-align:center;
+ border-top:1px solid color-mix(in srgb,var(--p-ac) 55%,transparent);
+ border-bottom:1px solid color-mix(in srgb,var(--p-ac) 55%,transparent)}
+.poster .gtd small{display:block;font-size:.52rem;letter-spacing:.34em;text-transform:uppercase;opacity:.7;margin-bottom:2px}
+.poster .gtd b{font-size:1.65rem;font-weight:800;color:var(--p-ac);letter-spacing:.02em;
+ font-variant-numeric:tabular-nums;line-height:1;font-family:"Arial Narrow",system-ui,sans-serif}
+.poster .meta3{display:flex;margin-top:12px}
+.poster .m{flex:1;text-align:center;padding:2px 0}
+.poster .m+.m{border-left:1px solid rgba(255,255,255,.18)}
+.poster .m b{display:block;font-size:.78rem;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.poster .m span{font-size:.48rem;opacity:.6;letter-spacing:.18em;text-transform:uppercase}
+.poster .note{margin-top:12px;text-align:center;font-size:.56rem;opacity:.82;letter-spacing:.04em}
+.poster .foot{margin-top:9px;text-align:center;font-size:.48rem;opacity:.5;letter-spacing:.22em;text-transform:uppercase}
+/* variants */
+.poster.v-left .datechip,.poster.v-left .ttl{text-align:left}
+.poster.v-left .gtd{text-align:left}
+.poster.v-left .gtd b{font-size:1.5rem}
+.poster.v-left .note,.poster.v-left .foot{text-align:left}
+.poster.v-center{text-align:center}
+.poster.v-center .brandrow{justify-content:center}
+.poster.v-center .brandrow::after{display:none}
+.poster.v-stack .ttl{font-size:2.3rem}
+.poster.v-stack .gtd{border:0;padding:8px 0 0}
+.poster.v-stack .gtd b{font-size:2.1rem}
+/* editable highlight (editor only) */
+.poster [data-fld]{cursor:pointer;border-radius:3px;transition:box-shadow .15s}
+.poster [data-fld]:hover{box-shadow:0 0 0 1.5px color-mix(in srgb,var(--p-ac) 80%,transparent)}
+.poster .bump{animation:bump .5s var(--ease)}
+@keyframes bump{0%{opacity:.2}100%{opacity:1}}
+/* small poster in cards */
+.pcard .poster{border-radius:0;font-size:.62em}
+.pcard .poster .ttl{font-size:1.15rem}
+.pcard .poster.v-stack .ttl{font-size:1.3rem}
+.pcard .poster .gtd b{font-size:1rem}
+.pcard .poster.v-stack .gtd b{font-size:1.2rem}
+.pcard .poster [data-fld]{pointer-events:none}
+
+/* ── settings modal ── */
+.scrim{position:fixed;inset:0;background:rgba(8,7,5,.6);backdrop-filter:blur(3px);
+ display:grid;place-items:center;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30}
+.scrim.on{opacity:1;pointer-events:auto}
+.modal{width:min(560px,92vw);max-height:86vh;overflow:auto;background:var(--bg2);border:1px solid var(--border2);
+ border-radius:16px;padding:26px 26px 22px;transform:translateY(10px);transition:transform .25s var(--ease)}
+.scrim.on .modal{transform:none}
+.modal h2{margin:0;font-size:1.05rem}
+.modal .md{color:var(--faint);font-size:.82rem;margin:3px 0 18px}
+.modal h3{font-size:.72rem;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin:18px 0 9px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:8px 13px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--panel);
+ font-size:.84rem;transition:border-color .15s,background .15s;display:flex;align-items:center;gap:7px}
+.chip:hover{background:var(--hover)}
+.chip[aria-pressed="true"]{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 9%,var(--panel))}
+.chip svg{width:16px;height:16px}
+.chip .csw{width:22px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.4)}
+.modal .mfoot{display:flex;justify-content:flex-end;gap:10px;margin-top:22px}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,16px);background:var(--panel2);
+ border:1px solid var(--border2);border-radius:10px;padding:11px 20px;font-size:.86rem;font-weight:600;
+ opacity:0;pointer-events:none;transition:opacity .25s,transform .25s var(--ease);z-index:40;
+ box-shadow:0 12px 34px -8px rgba(0,0,0,.6)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast b{color:var(--good)}
+
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="shell">
+<header class="topbar">
+  <div class="logo">
+    <svg viewBox="0 0 38 38" aria-hidden="true"><path d="M19 4C13 12 7 15 7 21c0 4 3 7 7 7 1.6 0 3.1-.5 4-1.4V30c0 2-1 3.4-3 4h8c-2-.6-3-2-3-4v-3.4c.9.9 2.4 1.4 4 1.4 4 0 7-3 7-7 0-6-6-9-12-17z" fill="#D9A94C"/></svg>
+    <span>POSTER STUDIO<small>블러프 홀덤펍</small></span>
+  </div>
+  <span class="sp"></span>
+  <button class="tbtn" id="btnBrand">하우스 스타일</button>
+  <button class="tbtn primary" id="btnNew">새 포스터</button>
+</header>
+
+<!-- ═══ HOME ═══ -->
+<section class="view on" id="vHome">
+  <div class="homehead"><h1>내 포스터</h1><span class="cnt" id="cnt"></span></div>
+  <div class="nudge" id="nudge">
+    <span>이번 주 <b>위클리 메인 이벤트</b> 포스터가 아직 없습니다. 지난주 것을 이어받으면 날짜만 바꾸면 됩니다.</span>
+    <button class="go" id="nudgeGo">이어받아 만들기</button>
+  </div>
+  <div class="pgrid" id="grid"></div>
+</section>
+
+<!-- ═══ EDITOR ═══ -->
+<section class="view" id="vEdit">
+  <div class="edhead">
+    <button class="back" id="btnBack">&#8592; 내 포스터</button>
+    <span class="ttl" id="edTitle">새 포스터</span>
+    <span class="sub" id="edSub"></span>
+  </div>
+  <div class="edwrap">
+    <div>
+      <div class="form">
+        <div class="fld"><label for="fTitle">대회명</label><input id="fTitle" data-k="title" placeholder="위클리 메인 이벤트"></div>
+        <div class="frow">
+          <div class="fld"><label for="fDate">날짜</label><input id="fDate" data-k="date" placeholder="7월 19일 (토)"></div>
+          <div class="fld"><label for="fTime">시작</label><input id="fTime" data-k="time" placeholder="19:00"></div>
+        </div>
+        <div class="frow">
+          <div class="fld"><label for="fGtd">개런티</label><input id="fGtd" data-k="gtd" placeholder="300만"></div>
+          <div class="fld"><label for="fBuyin">바이인</label><input id="fBuyin" data-k="buyin" placeholder="5만"></div>
+        </div>
+        <div class="fld"><label for="fNote">한 줄 안내 <span style="text-transform:none;letter-spacing:0">— 선택</span></label><input id="fNote" data-k="note" placeholder="사전 등록 시 스택 추가"></div>
+      </div>
+      <p class="fnote">블라인드 구조·매장 정보·스타일은 <b>하우스 설정</b>을 따라 자동 구성됩니다. 포스터에서 글자를 바로 클릭해도 수정됩니다.</p>
+      <div class="pubrow"><button class="pub" id="btnPub">발행</button></div>
+    </div>
+    <div class="pvside">
+      <div class="stylerow" id="styleRow"></div>
+      <div class="pvframe">
+        <div class="poster" id="pv"></div>
+        <div class="qcsweep" id="qcs"><div class="line"></div></div>
+      </div>
+      <p class="pvhint"><b>발행하면</b> 규격 검수(글자 잘림·겹침·크기)를 통과한 이미지가 인스타·카카오톡 사이즈로 함께 생성됩니다.</p>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ═══ 하우스 스타일 ═══ -->
+<div class="scrim" id="scrim">
+  <div class="modal" role="dialog" aria-label="하우스 스타일">
+    <h2>하우스 스타일</h2>
+    <p class="md">모든 포스터에 적용되는 우리 매장의 기본 스타일입니다. 바꾸면 즉시 반영됩니다.</p>
+    <h3>문장</h3><div class="chips" id="cEmb"></div>
+    <h3>컬러</h3><div class="chips" id="cPal"></div>
+    <h3>제목 서체</h3><div class="chips" id="cTypo"></div>
+    <div class="mfoot"><button class="tbtn primary" id="btnBrandDone">완료</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ── data ── */
+var EMB={
+ spade:{nm:"스페이드",d:"M19 4C13 12 7 15 7 21c0 4 3 7 7 7 1.6 0 3.1-.5 4-1.4V30c0 2-1 3.4-3 4h8c-2-.6-3-2-3-4v-3.4c.9.9 2.4 1.4 4 1.4 4 0 7-3 7-7 0-6-6-9-12-17z"},
+ crown:{nm:"크라운",d:"M6 26l-2-14 8 6 7-10 7 10 8-6-2 14H6zm0 3h26v4H6z"},
+ shield:{nm:"실드",d:"M19 3l13 5v10c0 8-5.5 13.5-13 17C11.5 31.5 6 26 6 18V8l13-5z"},
+ diamond:{nm:"다이아",d:"M19 3l11 16-11 16L8 19 19 3z"},
+ bolt:{nm:"볼트",d:"M22 3L8 22h8l-3 13 14-19h-8l3-13z"},
+ chip:{nm:"칩",d:"M19 4a15 15 0 100 30 15 15 0 000-30zm0 7a8 8 0 110 16 8 8 0 010-16zM19 6.5l1.5 4h-3l1.5-4zm0 25l-1.5-4h3l-1.5 4zM6.5 19l4-1.5v3l-4-1.5zm25 0l-4 1.5v-3l4 1.5z"}
+};
+var PAL={
+ midnight:{nm:"미드나잇",g1:"#0D1730",g2:"#2B3E68",hi:"rgba(120,150,220,.28)",ac:"#C9D6F2"},
+ gold:{nm:"골드",g1:"#171006",g2:"#6E4B12",hi:"rgba(240,190,90,.25)",ac:"#EFC066"},
+ crimson:{nm:"크림슨",g1:"#1D060B",g2:"#701527",hi:"rgba(230,110,130,.22)",ac:"#F2A0AC"},
+ ocean:{nm:"오션",g1:"#041F2A",g2:"#0F5866",hi:"rgba(110,210,205,.22)",ac:"#7FD9D2"},
+ forest:{nm:"포레스트",g1:"#0A1F15",g2:"#2C5744",hi:"rgba(200,180,110,.2)",ac:"#D8BC74"},
+ violet:{nm:"바이올렛",g1:"#180B2E",g2:"#4C2478",hi:"rgba(180,140,235,.24)",ac:"#C7A6F0"}
+};
+var TYPO={
+ condensed:{nm:"임팩트",css:'"Arial Narrow",system-ui,"Noto Sans KR",sans-serif',tt:"uppercase"},
+ serif:{nm:"클래식",css:'Georgia,"Nanum Myeongjo",serif',tt:"none"},
+ modern:{nm:"모던",css:'system-ui,"Noto Sans KR",sans-serif',tt:"none"}
+};
+var VAR=[{id:"v-center",nm:"센터"},{id:"v-left",nm:"스플릿"},{id:"v-stack",nm:"볼드"}];
+
+var kit={emb:"spade",pal:"midnight",typo:"condensed"};
+
+var posters=[
+ {id:1,title:"위클리 메인 이벤트",date:"7월 12일 (토)",time:"19:00",gtd:"300만",buyin:"5만",note:"사전 등록 시 스택 추가",v:"v-center",pub:"7월 10일 발행"},
+ {id:2,title:"데일리 터보",date:"7월 16일 (수)",time:"20:00",gtd:"100만",buyin:"3만",note:"",v:"v-left",pub:"7월 14일 발행"},
+ {id:3,title:"월간 챔피언십",date:"6월 29일 (일)",time:"18:00",gtd:"1,000만",buyin:"10만",note:"역대 최대 개런티",v:"v-stack",pub:"6월 20일 발행"},
+ {id:4,title:"데일리 딥스택",date:"7월 11일 (금)",time:"20:30",gtd:"150만",buyin:"3만",note:"",v:"v-center",pub:"7월 9일 발행"}
+];
+var nextId=5;
+
+/* editor state */
+var cur=null;      // working copy
+var curSrc=null;   // id if editing existing, null if new
+var curVar="v-center";
+
+/* ── poster render ── */
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+function embSVG(color,cls){return '<svg class="'+(cls||"")+'" viewBox="0 0 38 38" aria-hidden="true"><path d="'+EMB[kit.emb].d+'" fill="'+color+'"/></svg>';}
+function renderPoster(el,d,v,editable){
+ var p=PAL[kit.pal],t=TYPO[kit.typo];
+ el.className="poster "+v;
+ el.style.setProperty("--p-g1",p.g1);
+ el.style.setProperty("--p-g2",p.g2);
+ el.style.setProperty("--p-hi",p.hi);
+ el.style.setProperty("--p-ac",p.ac);
+ var f=function(k,inner,tag,cls){
+  tag=tag||"span";
+  return "<"+tag+(cls?' class="'+cls+'"':"")+(editable?' data-fld="'+k+'"':"")+">"+inner+"</"+tag+">";
+ };
+ el.innerHTML=embSVG(p.ac,"wm")
+  +'<div class="brandrow">'+embSVG(p.ac)+'<span>블러프 홀덤펍</span></div>'
+  +'<div class="datechip">'+f("date",esc(d.date||"날짜"))+' · '+f("time",esc(d.time||"시간"))+'</div>'
+  +'<div class="ttl" style="font-family:'+t.css+';text-transform:'+t.tt+'">'+f("title",esc(d.title||"대회명"))+'</div>'
+  +'<div class="gtd"><small>Guaranteed</small><b>'+f("gtd",esc(d.gtd||"—"))+'</b></div>'
+  +'<div class="meta3">'
+  +'<div class="m"><b>'+f("buyin",esc(d.buyin||"—"))+'</b><span>Buy-in</span></div>'
+  +'<div class="m"><b>30,000</b><span>Stack</span></div>'
+  +'<div class="m"><b>15분</b><span>Level</span></div>'
+  +'</div>'
+  +(d.note?'<div class="note">'+f("note",esc(d.note))+'</div>':"")
+  +'<div class="foot">@bluff_holdem · 매주 목–일</div>';
+ if(editable){
+  el.querySelectorAll("[data-fld]").forEach(function(s){
+   s.addEventListener("click",function(){
+    var inp=document.querySelector('.fld input[data-k="'+s.dataset.fld+'"]');
+    if(inp){inp.focus();inp.select();}
+   });
+  });
+ }
+}
+
+/* ── home ── */
+function drawHome(){
+ var g=document.getElementById("grid");
+ g.innerHTML="";
+ var nc=document.createElement("button");
+ nc.className="pcard newcard";
+ nc.innerHTML='<span style="text-align:center"><span class="plus">+</span><span>새 포스터</span></span>';
+ nc.addEventListener("click",function(){openEditor(null);});
+ g.appendChild(nc);
+ posters.forEach(function(p){
+  var c=document.createElement("div");c.className="pcard";
+  var th=document.createElement("div");th.className="thumb";
+  var po=document.createElement("div");
+  renderPoster(po,p,p.v,false);
+  th.appendChild(po);
+  var acts=document.createElement("div");acts.className="acts";
+  var b1=document.createElement("button");b1.textContent="이어받아 새로";
+  b1.addEventListener("click",function(){openEditor(p,true);});
+  var b2=document.createElement("button");b2.className="ghost";b2.textContent="수정";
+  b2.addEventListener("click",function(){openEditor(p,false);});
+  acts.appendChild(b1);acts.appendChild(b2);
+  th.appendChild(acts);
+  c.appendChild(th);
+  c.innerHTML+='<div class="info"><div class="nm">'+esc(p.title)+'</div><div class="mt"><span class="badge"></span>'+esc(p.date)+' · '+esc(p.pub)+'</div></div>';
+  /* innerHTML+= kills listeners on th — rebind */
+  var th2=c.querySelector(".thumb");
+  th2.querySelectorAll(".acts button")[0].addEventListener("click",function(){openEditor(p,true);});
+  th2.querySelectorAll(".acts button")[1].addEventListener("click",function(){openEditor(p,false);});
+  g.appendChild(c);
+ });
+ document.getElementById("cnt").textContent=posters.length+"장";
+}
+
+/* ── views ── */
+function showView(id){
+ document.querySelectorAll(".view").forEach(function(v){v.classList.remove("on");});
+ var v=document.getElementById(id);
+ v.classList.remove("on");void v.offsetWidth;v.classList.add("on");
+ window.scrollTo({top:0});
+}
+
+/* ── editor ── */
+function bumpDate(s){
+ var m=/^(\d+)월 (\d+)일(.*)$/.exec(s||"");
+ if(!m)return s;
+ var mo=+m[1],da=+m[2]+7,days=[31,28,31,30,31,30,31,31,30,31,30,31];
+ if(da>days[mo-1]){da-=days[mo-1];mo=mo%12+1;}
+ return mo+"월 "+da+"일"+m[3];
+}
+function openEditor(src,dup){
+ if(!src){cur={title:"",date:"",time:"",gtd:"",buyin:"",note:""};curSrc=null;curVar="v-center";
+  document.getElementById("edTitle").textContent="새 포스터";
+  document.getElementById("edSub").textContent="";
+ }else if(dup){
+  cur={title:src.title,date:bumpDate(src.date),time:src.time,gtd:src.gtd,buyin:src.buyin,note:src.note};
+  curSrc=null;curVar=src.v;
+  document.getElementById("edTitle").textContent=src.title;
+  document.getElementById("edSub").textContent="지난 포스터 이어받음 — 날짜는 다음 주로 옮겨뒀습니다";
+ }else{
+  cur={title:src.title,date:src.date,time:src.time,gtd:src.gtd,buyin:src.buyin,note:src.note};
+  curSrc=src.id;curVar=src.v;
+  document.getElementById("edTitle").textContent=src.title;
+  document.getElementById("edSub").textContent="발행본 수정 — 재발행하면 게시물 이미지가 교체됩니다";
+ }
+ document.querySelectorAll(".fld input").forEach(function(i){i.value=cur[i.dataset.k]||"";});
+ var pb=document.getElementById("btnPub");
+ pb.disabled=false;pb.classList.remove("done");
+ pb.textContent=curSrc?"재발행":"발행";
+ drawStyles();drawPv();
+ showView("vEdit");
+ if(!src)document.getElementById("fTitle").focus();
+}
+function drawPv(){
+ renderPoster(document.getElementById("pv"),cur,curVar,true);
+}
+function drawStyles(){
+ var r=document.getElementById("styleRow");r.innerHTML="";
+ VAR.forEach(function(v){
+  var b=document.createElement("button");
+  b.className="styleth";b.setAttribute("aria-pressed",v.id===curVar?"true":"false");
+  var po=document.createElement("div");
+  renderPoster(po,cur,v.id,false);
+  b.appendChild(po);
+  b.innerHTML+='<span class="snm">'+v.nm+'</span>';
+  b.addEventListener("click",function(){curVar=v.id;drawStyles();drawPv();});
+  r.appendChild(b);
+ });
+}
+document.querySelectorAll(".fld input").forEach(function(i){
+ i.addEventListener("input",function(){
+  cur[i.dataset.k]=i.value;
+  drawPv();
+  var s=document.querySelector('#pv [data-fld="'+i.dataset.k+'"]');
+  if(s)s.classList.add("bump");
+ });
+});
+
+/* ── publish ── */
+document.getElementById("btnPub").addEventListener("click",function(){
+ var pb=this;
+ pb.disabled=true;pb.textContent="규격 검수 중";
+ var qs=document.getElementById("qcs");
+ qs.classList.add("on");
+ var line=qs.querySelector(".line");
+ line.style.animation="none";void line.offsetWidth;line.style.animation="";
+ setTimeout(function(){
+  qs.classList.remove("on");
+  pb.classList.add("done");pb.textContent="발행 완료";
+  var d={id:curSrc||nextId++,title:cur.title||"제목 없음",date:cur.date,time:cur.time,gtd:cur.gtd,buyin:cur.buyin,note:cur.note,v:curVar,pub:"방금 발행"};
+  if(curSrc){posters=posters.map(function(p){return p.id===curSrc?d:p;});}
+  else{posters.unshift(d);}
+  toast("검수 통과 — <b>발행됨</b> · 인스타·카카오톡 이미지 생성");
+  setTimeout(function(){drawHome();showView("vHome");},700);
+ },1100);
+});
+
+/* ── toast ── */
+var toastT;
+function toast(html){
+ var t=document.getElementById("toast");
+ t.innerHTML=html;t.classList.add("on");
+ clearTimeout(toastT);
+ toastT=setTimeout(function(){t.classList.remove("on");},2600);
+}
+
+/* ── brand modal ── */
+function drawBrand(){
+ var ce=document.getElementById("cEmb");ce.innerHTML="";
+ Object.keys(EMB).forEach(function(k){
+  var b=document.createElement("button");b.className="chip";b.setAttribute("aria-pressed",k===kit.emb?"true":"false");
+  b.innerHTML='<svg viewBox="0 0 38 38" aria-hidden="true"><path d="'+EMB[k].d+'" fill="currentColor"/></svg>'+EMB[k].nm;
+  b.addEventListener("click",function(){kit.emb=k;drawBrand();refreshAll();});
+  ce.appendChild(b);
+ });
+ var cp=document.getElementById("cPal");cp.innerHTML="";
+ Object.keys(PAL).forEach(function(k){
+  var p=PAL[k];
+  var b=document.createElement("button");b.className="chip";b.setAttribute("aria-pressed",k===kit.pal?"true":"false");
+  b.innerHTML='<span class="csw" style="background:linear-gradient(120deg,'+p.g1+","+p.g2+" 60%,"+p.ac+')"></span>'+p.nm;
+  b.addEventListener("click",function(){kit.pal=k;drawBrand();refreshAll();});
+  cp.appendChild(b);
+ });
+ var ct=document.getElementById("cTypo");ct.innerHTML="";
+ Object.keys(TYPO).forEach(function(k){
+  var b=document.createElement("button");b.className="chip";b.setAttribute("aria-pressed",k===kit.typo?"true":"false");
+  b.textContent=TYPO[k].nm;
+  b.addEventListener("click",function(){kit.typo=k;drawBrand();refreshAll();});
+  ct.appendChild(b);
+ });
+}
+function refreshAll(){
+ drawHome();
+ if(document.getElementById("vEdit").classList.contains("on")){drawStyles();drawPv();}
+}
+document.getElementById("btnBrand").addEventListener("click",function(){
+ drawBrand();document.getElementById("scrim").classList.add("on");
+});
+document.getElementById("btnBrandDone").addEventListener("click",function(){
+ document.getElementById("scrim").classList.remove("on");
+ toast("하우스 스타일 저장 — 모든 포스터에 적용됨");
+});
+document.getElementById("scrim").addEventListener("click",function(e){
+ if(e.target===this){this.classList.remove("on");}
+});
+
+/* ── nav ── */
+document.getElementById("btnNew").addEventListener("click",function(){openEditor(null);});
+document.getElementById("btnBack").addEventListener("click",function(){drawHome();showView("vHome");});
+document.getElementById("nudgeGo").addEventListener("click",function(){openEditor(posters.find(function(p){return p.title==="위클리 메인 이벤트";})||posters[0],true);});
+
+drawHome();
+})();
+</script>
+</body>
+</html>
