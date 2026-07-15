@@ -49,6 +49,8 @@ def render(data, lv, out="demo_EB.png"):
     my = gy + theight("GUARANTEED PRIZE POOL", oswald(17, 600)) + 8
     mf, _ = fit_font(data["gtd"], lambda s: bebas(s), MR - ML - 150, 150, 96)
     mi, mw, mh = text_img(data["gtd"], mf, (255, 255, 255), TH["gtd_lo"])
+    from render_editorial import metalize
+    mi = metalize(mi, TH["gtd_lo"])
     img.alpha_composite(mi, (ML, int(my)))
     d.text((ML + mw + 16, my + mh * 0.5), "GTD", font=oswald(36, 700), fill=gold, anchor="lm")
 

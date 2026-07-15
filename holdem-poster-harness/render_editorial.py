@@ -45,12 +45,64 @@ def grade(bg, acc, leak_xy=(0.82, 0.12)):
     gl = gl.filter(ImageFilter.GaussianBlur(130))
     t2 = Image.new("RGBA", (Wd, Hd), acc + (255,)); t2.putalpha(gl)
     img = Image.alpha_composite(img, t2)
+    # 보케 파티클(깊이) — 결정적 시드(테마 악센트 기반), 상단 2/3에 분포
+    import random as _rnd
+    rng = _rnd.Random(sum(acc) * 7 + Wd)
+    bok = Image.new("RGBA", (Wd, Hd), (0, 0, 0, 0)); bd = ImageDraw.Draw(bok)
+    for _ in range(46):
+        x = rng.randint(0, Wd); y = int(rng.random() ** 1.4 * Hd * 0.68)
+        small = rng.random() < 0.75
+        r = rng.randint(2, 7) if small else rng.randint(10, 24)
+        al = rng.randint(26, 66) if small else rng.randint(10, 24)
+        col = acc if rng.random() < 0.6 else (255, 244, 222)
+        bd.ellipse([x - r, y - r, x + r, y + r], fill=col + (al,))
+    img.alpha_composite(bok.filter(ImageFilter.GaussianBlur(2.5)))
+    bok2 = Image.new("RGBA", (Wd, Hd), (0, 0, 0, 0)); bd2 = ImageDraw.Draw(bok2)
+    for _ in range(7):
+        x = rng.randint(0, Wd); y = int(rng.random() * Hd * 0.55)
+        r = rng.randint(34, 68)
+        bd2.ellipse([x - r, y - r, x + r, y + r], fill=acc + (rng.randint(6, 13),))
+    img.alpha_composite(bok2.filter(ImageFilter.GaussianBlur(18)))
     sl = Image.new("RGBA", (Wd, Hd), (0, 0, 0, 0)); sd = ImageDraw.Draw(sl)
     for y in range(0, Hd, 3): sd.line([(0, y), (Wd, y)], fill=(0, 0, 0, 12), width=1)
     img.alpha_composite(sl)
     grain = Image.effect_noise((Wd, Hd), 22).convert("L")
     img.alpha_composite(Image.merge("RGBA", (grain, grain, grain, Image.new("L", (Wd, Hd), 10))))
     return img
+
+def metalize(src, tone=(246, 208, 118)):
+    """머니/총보증 타이포 메탈릭 마감 — 다단 그라데이션 + 베벨(상단 하이라이트/하단 셰이드).
+    text_img 산출물을 후처리한다(크기·qc 마킹 보존 → QC 박스 불변)."""
+    w, h = src.size
+    a = src.split()[3]
+    def mix(c1, c2, t):
+        return tuple(int(c1[i] * (1 - t) + c2[i] * t) for i in range(3))
+    WHT, BLK = (255, 255, 255), (0, 0, 0)
+    stops = [(0.00, mix(tone, WHT, 0.62)), (0.26, mix(tone, WHT, 0.18)),
+             (0.44, mix(tone, WHT, 0.72)), (0.54, tone),
+             (0.82, mix(tone, BLK, 0.28)), (1.00, mix(tone, BLK, 0.45))]
+    grad = Image.new("RGB", (1, h))
+    for y in range(h):
+        t = y / max(1, h - 1)
+        for i in range(len(stops) - 1):
+            p0, c0 = stops[i]; p1, c1 = stops[i + 1]
+            if p0 <= t <= p1:
+                f = (t - p0) / max(1e-6, p1 - p0)
+                grad.putpixel((0, y), mix(c0, c1, f)); break
+    body = grad.resize((w, h)).convert("RGBA"); body.putalpha(a)
+    out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    out.alpha_composite(body)
+    # 베벨: 위 2px 에지 하이라이트 / 아래 2px 에지 셰이드
+    dn = Image.new("L", (w, h), 0); dn.paste(a, (0, 2))
+    top_edge = ImageChops.subtract(a, dn).point(lambda v: int(v * 0.75))
+    hl = Image.new("RGBA", (w, h), mix(tone, WHT, 0.9) + (255,)); hl.putalpha(top_edge)
+    out.alpha_composite(hl)
+    up = Image.new("L", (w, h), 0); up.paste(a, (0, -2))
+    bot_edge = ImageChops.subtract(a, up).point(lambda v: int(v * 0.6))
+    sh = Image.new("RGBA", (w, h), mix(tone, BLK, 0.6) + (255,)); sh.putalpha(bot_edge)
+    out.alpha_composite(sh)
+    out.qc_text = getattr(src, "qc_text", None)
+    return out
 
 def rect_blend(img, box, fill, radius=0):
     """RGBA 캔버스에 '진짜 반투명' 사각형. (ImageDraw.rectangle은 알파를 SET해서
@@ -160,6 +212,7 @@ def render(data, out="demo_E.png"):
     my = gy + theight("TOTAL GUARANTEED", oswald(20, 600)) + 8
     mf, msz = fit_font(data["gtd"], lambda s: bebas(s), MR - ML - 120, 210, 120)
     mi, mw, mh = text_img(data["gtd"], mf, (255, 255, 255), TH["gtd_lo"])
+    mi = metalize(mi, TH["gtd_lo"])
     ghst = mi.copy(); ghst.putalpha(mi.split()[3].point(lambda v: int(v * 0.22)))
     img.alpha_composite(ghst, (ML + 10, int(my) + 10)); img.alpha_composite(mi, (ML, int(my)))
     d.text((ML + mw + 18, my + mh * 0.5), "GTD", font=oswald(40, 700), fill=acc, anchor="lm")

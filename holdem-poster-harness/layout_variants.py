@@ -12,7 +12,7 @@ import math, os, sys
 from PIL import Image, ImageDraw
 from render_poster import (noto, measure, fit_font, fit_common, draw_ls, lsw,
                            text_img, theight, theme_palette, ASSET)
-from render_editorial import bebas, oswald, grade, frost, vtext, rect_blend
+from render_editorial import bebas, oswald, grade, frost, vtext, rect_blend, metalize
 
 W, H = 1080, 1900
 ML, MR, SAFE_B = 80, W - 72, H - 60
@@ -56,6 +56,7 @@ def hero_left(img, d, data, acc, soft, hi, lo, tw_max, m_max, right_block=True):
     mf, _ = fit_font(data["gtd"], lambda s: bebas(s), m_max, 150, 90)
     TH = theme_palette(data["theme"])
     mi, mw, mh = text_img(data["gtd"], mf, (255, 255, 255), TH["gtd_lo"])
+    mi = metalize(mi, TH["gtd_lo"])
     img.alpha_composite(mi, (ML, int(my)))
     d.text((ML + mw + 16, my + mh * 0.5), "GTD", font=oswald(36, 700), fill=GOLD, anchor="lm")
     yb = my + mh + 18
@@ -81,6 +82,7 @@ def hero_center(img, d, data, acc, soft, hi, lo):
     mf, _ = fit_font(data["gtd"], lambda s: bebas(s), MR - ML - 220, 150, 90)
     TH = theme_palette(data["theme"])
     mi, mw, mh = text_img(data["gtd"], mf, (255, 255, 255), TH["gtd_lo"])
+    mi = metalize(mi, TH["gtd_lo"])
     tot = mw + 16 + measure("GTD", oswald(36, 700))[0]
     x0 = CX - tot / 2
     img.alpha_composite(mi, (int(x0), int(my)))

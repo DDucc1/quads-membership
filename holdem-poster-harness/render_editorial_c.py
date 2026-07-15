@@ -58,6 +58,8 @@ def render(data, out="demo_EC.png"):
     my = gyl + theight("TOTAL GUARANTEED", oswald(20, 600)) + 8
     mf, _ = fit_font(data["total"], lambda s: bebas(s), MR - ML - 140, 150, 96)
     mi, mw, mh = text_img(data["total"], mf, (255, 255, 255), TH["gtd_lo"])
+    from render_editorial import metalize
+    mi = metalize(mi, TH["gtd_lo"])
     img.alpha_composite(mi, (ML, int(my)))
     d.text((ML + mw + 16, my + mh * 0.52), "KRW", font=oswald(34, 700), fill=gold, anchor="lm")
     ry = my + mh + 16
