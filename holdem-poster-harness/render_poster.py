@@ -72,6 +72,16 @@ def theight(t, f):
     어센더 오프셋을 놓쳐 아래 요소와 겹침을 유발한다 — 간격 계산은 반드시 이걸 쓴다."""
     b = _sc.textbbox((0, 0), t, font=f)
     return b[3]
+def fit_common(items, fac, start, mn):
+    """여러 (텍스트, 최대폭) 쌍이 전부 들어가는 공통 최대 폰트 — 동일 역할 요소 크기 통일용.
+    (열마다 각자 축소해 크기가 제각각 되는 문제를 원천 차단한다)"""
+    s = start
+    while s > mn:
+        f = fac(s)
+        if all(measure(t, f)[0] <= w for t, w in items):
+            return f, s
+        s -= 1
+    return fac(mn), mn
 def lsw(t, f, ls):
     return sum(_sc.textlength(c, font=f) for c in t) + ls * max(0, len(t) - 1)
 def draw_ls(d, xy, t, f, fill, ls=0, anchor="la"):

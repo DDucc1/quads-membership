@@ -3,7 +3,7 @@
 """에디토리얼 크래프트 — B형(스트럭처 시트). 프로스티드 표 패널 + 거대 머니 + 새 타이포."""
 import os, sys
 from PIL import Image, ImageDraw
-from render_poster import noto, measure, fit_font, draw_ls, lsw, text_img, theight, theme_palette, ASSET
+from render_poster import noto, measure, fit_font, fit_common, draw_ls, lsw, text_img, theight, theme_palette, ASSET
 from render_editorial import bebas, oswald, grade, frost, vtext, spade, rect_blend
 import render_poster_b as B
 
@@ -54,23 +54,28 @@ def render(data, lv, out="demo_EB.png"):
     d.line([(ML, yb), (MR, yb)], fill=(255, 255, 255, 44), width=1)
     d.line([(ML, yb), (ML + 90, yb)], fill=acc, width=3)
 
-    # BUY-IN 전용 행 (전폭 — 좌 라벨 + 값)
-    bi_y = yb + 16
-    draw_ls(d, (ML, bi_y + 8), "BUY-IN", oswald(14, 600), acc, ls=3, anchor="la")
-    bvf, _ = fit_font(data["buyin"], lambda s: noto(s, 800), MR - ML - 160, 26, 15)
-    d.text((ML + 118, bi_y), data["buyin"], font=bvf, fill=hi, anchor="la")
+    # BUY-IN 행 — 스탯 스트립과 같은 규격의 프로스트 행 (라벨 칩 + 값, 수직 중앙)
+    bi_y = yb + 16; bi_h = 56
+    frost(img, (ML, bi_y, MR, bi_y + bi_h), 12, acc, tab=False)
+    ccy = bi_y + bi_h / 2
+    chip_f = oswald(12, 700)
+    chw = int(lsw("BUY-IN", chip_f, 3)) + 32
+    rect_blend(img, [ML + 16, ccy - 14, ML + 16 + chw, ccy + 14], (acc[0], acc[1], acc[2], 235), radius=14)
+    draw_ls(d, (ML + 16 + chw / 2, ccy), "BUY-IN", chip_f, (18, 12, 32), ls=3, anchor="mm")
+    bvf, _ = fit_font(data["buyin"], lambda s: noto(s, 800), MR - ML - chw - 100, 27, 21)
+    d.text((ML + 16 + chw + 24, ccy), data["buyin"], font=bvf, fill=hi, anchor="lm")
 
-    # 스탯 4열 (프로스티드 스트립)
-    sy0 = bi_y + 48; sy1 = sy0 + 96
+    # 스탯 4열 (프로스티드 스트립) — 라벨/값 공통 크기(열별 제각각 축소 금지) + 수직 중앙
+    sy0 = bi_y + bi_h + 14; sy1 = sy0 + 96
     frost(img, (ML, sy0, MR, sy1), 14, acc, tab=False)
     st = data["stats"]; n = len(st); cw = (MR - ML) / n
+    lab_f, _ = fit_common([(lab, cw - 20) for lab, _ in st], lambda s: oswald(s, 600), 15, 9)
+    val_f, _ = fit_common([(val, cw - 20) for _, val in st], lambda s: noto(s, 800), 30, 14)
     for i, (lab, val) in enumerate(st):
         sx = ML + cw * (i + 0.5)
         if i: d.line([(ML + cw * i, sy0 + 18), (ML + cw * i, sy1 - 18)], fill=(255, 255, 255, 30), width=1)
-        lf, _ = fit_font(lab, lambda s: oswald(s, 600), cw - 16, 15, 10)
-        draw_ls(d, (sx, sy0 + 22), lab, lf, soft, ls=1, anchor="ma")
-        vf, _ = fit_font(val, lambda s: noto(s, 800), cw - 16, 30, 15)
-        d.text((sx, sy0 + 50), val, font=vf, fill=hi, anchor="ma")
+        draw_ls(d, (sx, sy0 + 20), lab, lab_f, soft, ls=1, anchor="ma")
+        d.text((sx, sy0 + 48), val, font=val_f, fill=hi, anchor="ma")
 
     # BODY: 좌 프라이즈 / 우 블라인드 (프로스티드 패널)
     by0 = sy1 + 24; by1 = 1608   # Notice 4행 + 푸터가 세이프존 안에 들어오는 상한
@@ -79,26 +84,32 @@ def render(data, lv, out="demo_EB.png"):
     rx0 = ML + lw + 22
     frost(img, (rx0, by0, MR, by1), 16, acc)
 
-    # 프라이즈
-    pad = 22
-    draw_ls(d, (ML + pad, by0 + 20), "PRIZE", oswald(16, 700), acc, ls=4, anchor="la")
-    d.text((ML + lw - pad, by0 + 16), "RANK", font=oswald(13, 600), fill=soft, anchor="ra")
-    py = by0 + 50; prh = (by1 - py - 16) / len(data["prizes"])
-    for i, (rk, pz) in enumerate(data["prizes"]):
-        yy = py + prh * i
-        if i % 2 == 0: rect_blend(img, [ML + 8, yy, ML + lw - 8, yy + prh], (255, 255, 255, 16))
-        big = i < 3
-        d.text((ML + pad, yy + prh / 2), rk, font=oswald(15, 700 if big else 500),
-               fill=gold if big else hi, anchor="lm")
-        d.text((ML + lw - pad, yy + prh / 2), pz, font=oswald(15, 700 if big else 500),
-               fill=gold if big else soft, anchor="rm")
-
-    # 블라인드 2 서브컬럼
+    # 표 공통 규격: 프라이즈 행/블라인드 셀은 같은 크기(옆에 나란한 행들 크기 통일)
     cols = ["LV", "SB", "BB", "ANTE", "BLIND"]; prop = [0.13, 0.215, 0.215, 0.20, 0.24]
     g1 = lv[:20]; g2 = lv[20:]
     gw = (MR - rx0 - 16) / 2
     rh = (by1 - (by0 + 20) - 30) / (max(len(g1), len(g2)) + 1)
     rh = min(rh, 34)
+    cell_items = [(v, gw * prop[i] - 4) for r in lv if r[0] != "BRK" for i, v in enumerate(r)]
+    cell_items += [(rk, 150) for rk, _ in data["prizes"]] + [(pz, 150) for _, pz in data["prizes"]]
+    cell_items += [(r[1], gw - 12) for r in lv if r[0] == "BRK"]   # BREAK행도 동일 크기
+    cf_c, _ = fit_common(cell_items, lambda s: oswald(s, 600), 14, 9)
+    brk_f = cf_c
+
+    # 프라이즈
+    pad = 22
+    draw_ls(d, (ML + pad, by0 + 20), "PRIZE", oswald(13, 700), acc, ls=4, anchor="la")
+    d.text((ML + lw - pad, by0 + 20), "RANK", font=oswald(13, 600), fill=soft, anchor="ra")
+    py = by0 + 50; prh = (by1 - py - 16) / len(data["prizes"])
+    pf_big = oswald(cf_c.size, 700); pf_reg = oswald(cf_c.size, 500)
+    for i, (rk, pz) in enumerate(data["prizes"]):
+        yy = py + prh * i
+        if i % 2 == 0: rect_blend(img, [ML + 8, yy, ML + lw - 8, yy + prh], (255, 255, 255, 16))
+        big = i < 3
+        d.text((ML + pad, yy + prh / 2), rk, font=pf_big if big else pf_reg,
+               fill=gold if big else hi, anchor="lm")
+        d.text((ML + lw - pad, yy + prh / 2), pz, font=pf_big if big else pf_reg,
+               fill=gold if big else soft, anchor="rm")
     def col(x0, rows):
         cen = []; a = 0
         for p in prop: cen.append(x0 + (a + p / 2) * gw); a += p
@@ -109,15 +120,11 @@ def render(data, lv, out="demo_EB.png"):
         for r in rows:
             if r[0] == "BRK":
                 rect_blend(img, [x0, y, x0 + gw, y + rh], (acc[0], acc[1], acc[2], 95))
-                t = r[1]; f = oswald(13, 600)
-                if measure(t, f)[0] > gw - 10: f, _ = fit_font(t, lambda s: oswald(s, 600), gw - 10, 13, 9)
-                d.text((x0 + gw / 2, y + rh / 2), t, font=f, fill=hi, anchor="mm")
+                d.text((x0 + gw / 2, y + rh / 2), r[1], font=brk_f, fill=hi, anchor="mm")
             else:
                 if zi % 2 == 0: rect_blend(img, [x0, y, x0 + gw, y + rh], (255, 255, 255, 14))
                 for i, (v, cx) in enumerate(zip(r, cen)):
-                    f = oswald(14, 600)
-                    if measure(v, f)[0] > gw * prop[i] - 3: f, _ = fit_font(v, lambda s: oswald(s, 600), gw * prop[i] - 3, 14, 9)
-                    d.text((cx, y + rh / 2), v, font=f, fill=gold if i == 0 else soft, anchor="mm")
+                    d.text((cx, y + rh / 2), v, font=cf_c, fill=gold if i == 0 else soft, anchor="mm")
                 zi += 1
             y += rh
     col(rx0, g1); col(rx0 + gw + 16, g2)
@@ -126,12 +133,11 @@ def render(data, lv, out="demo_EB.png"):
     ny = by1 + 22
     nt = vtext("NOTICE", oswald(14, 700), lo + (200,), ls=4); img.alpha_composite(nt, (ML - 6, ny))
     nx = ML + 30; colw = (MR - nx) / 2; lh = 26; half = (len(data["notice"]) + 1) // 2
+    nf, _ = fit_common([("· " + l, colw - 20) for l in data["notice"]], lambda s: noto(s, 400), 14, 11)
     for ci, chunk in enumerate([data["notice"][:half], data["notice"][half:]]):
         bx2 = nx + ci * colw; yc = ny
         for line in chunk:
-            f = noto(14, 400)
-            if measure("· " + line, f)[0] > colw - 20: f, _ = fit_font("· " + line, lambda s: noto(s, 400), colw - 20, 14, 11)
-            d.text((bx2, yc), "·", font=f, fill=acc, anchor="la"); d.text((bx2 + 14, yc), line, font=f, fill=lo, anchor="la"); yc += lh
+            d.text((bx2, yc), "·", font=nf, fill=acc, anchor="la"); d.text((bx2 + 14, yc), line, font=nf, fill=lo, anchor="la"); yc += lh
     # 좌: 스폰서(최대 3구역) / 우: 지점명+주소 2행 — 세이프존 하단 내 수용
     spy = SAFE_B - 44
     d.line([(ML, spy - 14), (MR, spy - 14)], fill=(255, 255, 255, 32), width=1)
@@ -141,8 +147,8 @@ def render(data, lv, out="demo_EB.png"):
         draw_ls(d, (sx, spy), lab, noto(12, 600), acc, ls=1, anchor="la")
         d.text((sx, spy + 18), name, font=noto(15, 700), fill=hi, anchor="la")
         sx += measure(name, noto(15, 700))[0] + 40
-    d.text((MR, spy), data["venue_name"], font=noto(14, 700), fill=hi, anchor="ra")
-    d.text((MR, spy + 18), data["venue_addr"], font=noto(13, 400), fill=lo, anchor="ra")
+    d.text((MR, spy), data["venue_name"], font=noto(15, 700), fill=hi, anchor="ra")
+    d.text((MR, spy + 20), data["venue_addr"], font=noto(15, 400), fill=lo, anchor="ra")
 
     img.convert("RGB").save(out, quality=95); print("saved", out)
 

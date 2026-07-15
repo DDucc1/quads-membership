@@ -7,7 +7,7 @@ B/C 렌더러는 이 모듈의 헬퍼를 import 한다.
 """
 import os, sys
 from PIL import Image, ImageDraw, ImageFilter, ImageEnhance, ImageFont, ImageChops
-from render_poster import noto, measure, fit_font, draw_ls, lsw, text_img, theight, theme_palette, ASSET
+from render_poster import noto, measure, fit_font, fit_common, draw_ls, lsw, text_img, theight, theme_palette, ASSET
 
 W, H = 1080, 1800
 # QC 규격: 세이프존(좌 6%=65px) 안에 레일 텍스트까지 들어오도록 마진 재배치
@@ -139,8 +139,8 @@ def render(data, out="demo_E.png"):
 
     # 상단바
     d.text((ML, 80), "PoD", font=bebas(40), fill=hi, anchor="lm")
-    draw_ls(d, (ML + 70, 80), "POKER OF DREAMS", oswald(15, 600), lo, ls=3, anchor="lm")
-    draw_ls(d, (MR, 80), data.get("date_short", "26.07.04 SAT"), oswald(17, 500), soft, ls=4, anchor="rm")
+    draw_ls(d, (ML + 70, 80), "POKER OF DREAMS", oswald(16, 600), lo, ls=3, anchor="lm")
+    draw_ls(d, (MR, 80), data.get("date_short", "26.07.04 SAT"), oswald(16, 500), soft, ls=4, anchor="rm")
     d.line([(ML, 120), (MR, 120)], fill=(255, 255, 255, 38), width=1)
 
     # HERO
@@ -168,38 +168,36 @@ def render(data, out="demo_E.png"):
     # 프로스티드 인포 카드
     cx0, cy0, cx1, cy1 = 66, 656, W - 66, 1066
     frost(img, (cx0, cy0, cx1, cy1), 20, acc); pad = 40
-    def kv(x, y, k, v, vw, kf_en=True):
-        draw_ls(d, (x, y), k, oswald(15, 600), acc, ls=3, anchor="la")
-        vf, _ = fit_font(v, lambda s: noto(s, 800), vw, 33, 19)
-        d.text((x, y + 22), v, font=vf, fill=hi, anchor="la")
-    kv(cx0 + pad, cy0 + pad, "DATE", data.get("date", ""), 360)
-    kv(cx0 + pad, cy0 + pad + 78, "VENUE", data.get("place", ""), 360)
     bx = cx0 + (cx1 - cx0) * 0.57
-    draw_ls(d, (bx, cy0 + pad), "BUY-IN", oswald(15, 600), acc, ls=3, anchor="la")
-    bvf, _ = fit_font(data["buyin"], lambda s: noto(s, 900), cx1 - pad - bx, 46, 24)
-    d.text((bx, cy0 + pad + 24), data["buyin"], font=bvf, fill=hi, anchor="la")
+    # 카드 상단 3개 값(DATE/VENUE/BUY-IN)은 공통 크기 — 열마다 제각각 축소 금지
+    kvf, _ = fit_common([(data.get("date", ""), 360), (data.get("place", ""), 360),
+                         (data["buyin"], cx1 - pad - bx)], lambda s: noto(s, 800), 33, 19)
+    def kv(x, y, k, v):
+        draw_ls(d, (x, y), k, oswald(15, 600), acc, ls=3, anchor="la")
+        d.text((x, y + 22), v, font=kvf, fill=hi, anchor="la")
+    kv(cx0 + pad, cy0 + pad, "DATE", data.get("date", ""))
+    kv(cx0 + pad, cy0 + pad + 78, "VENUE", data.get("place", ""))
+    kv(bx, cy0 + pad, "BUY-IN", data["buyin"])
     midy = cy0 + 196
     d.line([(cx0 + pad, midy), (cx1 - pad, midy)], fill=(255, 255, 255, 30), width=1)
     stats = [s for s in data["stats"] if s[1]]; n = len(stats); inw = (cx1 - cx0) - pad * 2; cw = inw / n
+    svf, _ = fit_common([(val, cw - 22) for _, val in stats], lambda s: noto(s, 800), 31, 17)
     for i, (lab, val) in enumerate(stats):
         sx = cx0 + pad + cw * i
         if i: d.line([(sx, midy + 22), (sx, cy1 - 28)], fill=(255, 255, 255, 26), width=1)
         draw_ls(d, (sx + 14, midy + 26), lab, oswald(14, 600), soft, ls=2, anchor="la")
-        vf, _ = fit_font(val, lambda s: noto(s, 800), cw - 22, 31, 17)
-        d.text((sx + 14, midy + 48), val, font=vf, fill=hi, anchor="la")
+        d.text((sx + 14, midy + 48), val, font=svf, fill=hi, anchor="la")
 
     # NOTICE
     ny = 1112
     nt = vtext("NOTICE", oswald(15, 700), lo + (200,), ls=5); img.alpha_composite(nt, (ML - 6, ny))
     nx = ML + 34; colw = (MR - nx) / 2; lh = 30; half = (len(data["notice"]) + 1) // 2
+    nf, _ = fit_common([("· " + l, colw - 22) for l in data["notice"]], lambda s: noto(s, 400), 16, 12)
     for ci, chunk in enumerate([data["notice"][:half], data["notice"][half:]]):
         bx2 = nx + ci * colw; yc = ny
         for line in chunk:
-            f = noto(16, 400)
-            if measure("· " + line, f)[0] > colw - 22:
-                f, _ = fit_font("· " + line, lambda s: noto(s, 400), colw - 22, 16, 12)
-            d.text((bx2, yc), "·", font=f, fill=acc, anchor="la")
-            d.text((bx2 + 16, yc), line, font=f, fill=lo, anchor="la"); yc += lh
+            d.text((bx2, yc), "·", font=nf, fill=acc, anchor="la")
+            d.text((bx2 + 16, yc), line, font=nf, fill=lo, anchor="la"); yc += lh
 
     # 스폰서 / 푸터
     spy = 1562
@@ -210,8 +208,8 @@ def render(data, out="demo_E.png"):
         d.text((sx, spy + 20), name, font=noto(18, 700), fill=hi, anchor="la")
         sx += measure(name, noto(18, 700))[0] + 50
     fy = SAFE_B - 16
-    draw_ls(d, (ML, fy), data["footer_name"], noto(19, 800), hi, ls=1, anchor="lm")
-    d.text((MR, fy), data["footer_addr"], font=noto(17, 400), fill=lo, anchor="rm")
+    draw_ls(d, (ML, fy), data["footer_name"], noto(18, 800), hi, ls=1, anchor="lm")
+    d.text((MR, fy), data["footer_addr"], font=noto(18, 400), fill=lo, anchor="rm")
 
     img.convert("RGB").save(out, quality=95); print("saved", out)
 

@@ -3,7 +3,7 @@
 """에디토리얼 크래프트 — C형(시리즈 스케줄 그리드). 프로스티드 그리드 + 날짜 그룹 + 거대 총보증."""
 import os, sys
 from PIL import Image, ImageDraw
-from render_poster import noto, measure, fit_font, draw_ls, lsw, text_img, theight, theme_palette, ASSET
+from render_poster import noto, measure, fit_font, fit_common, draw_ls, lsw, text_img, theight, theme_palette, ASSET
 from render_editorial import bebas, oswald, grade, frost, vtext, spade, rect_blend
 
 W, H = 1080, 1860
@@ -75,6 +75,14 @@ def render(data, out="demo_EC.png"):
     d.line([(inx0, hy + hrow), (inx1, hy + hrow)], fill=acc + (200,), width=2)
     rows = data["rows"]; ry0 = hy + hrow + 4
     rh = (gy1 - ry0 - 14) / len(rows)
+    # 그리드 전 셀 공통 크기(행/열 제각각 축소 금지). 굵기·색만 역할 구분.
+    items = []
+    for row in rows:
+        for j, v in enumerate(row):
+            if j == 0: items.append((v.split()[0], gw_ * data["prop"][0] - 6))
+            else: items.append((v, gw_ * data["prop"][j] - 6))
+    gf_c, _ = fit_common(items, lambda s: oswald(s, 700), 14, 9)
+    gf_bold = oswald(gf_c.size, 700); gf_reg = oswald(gf_c.size, 500)
     prev_date = None
     for i, row in enumerate(rows):
         yy = ry0 + rh * i
@@ -85,20 +93,14 @@ def render(data, out="demo_EC.png"):
         for j, (v, cx) in enumerate(zip(row, cen)):
             if j == 0:
                 if not new_grp: continue
-                draw_ls(d, (cx, yy + rh / 2), v.split()[0], oswald(16, 700), hi, ls=0, anchor="mm")
-                draw_ls(d, (cx, yy + rh / 2 + 18), v.split()[1], oswald(11, 500), soft, ls=1, anchor="mm")
+                d.text((cx, yy + rh / 2), v.split()[0], font=gf_bold, fill=hi, anchor="mm")
+                d.text((cx, yy + rh / 2 + 20), v.split()[1], font=oswald(11, 500), fill=soft, anchor="mm")
             elif j == 2:
-                f = oswald(16, 700)
-                if measure(v, f)[0] > gw_ * data["prop"][2] - 6: f, _ = fit_font(v, lambda s: oswald(s, 700), gw_ * data["prop"][2] - 6, 16, 11)
-                d.text((cx, yy + rh / 2), v, font=f, fill=hi, anchor="mm")
+                d.text((cx, yy + rh / 2), v, font=gf_bold, fill=hi, anchor="mm")
             elif j == 4:
-                f = oswald(15, 700)
-                if measure(v, f)[0] > gw_ * data["prop"][4] - 6: f, _ = fit_font(v, lambda s: oswald(s, 700), gw_ * data["prop"][4] - 6, 15, 10)
-                d.text((cx, yy + rh / 2), v, font=f, fill=gold, anchor="mm")
+                d.text((cx, yy + rh / 2), v, font=gf_bold, fill=gold, anchor="mm")
             else:
-                f = oswald(14, 500)
-                if measure(v, f)[0] > gw_ * data["prop"][j] - 5: f, _ = fit_font(v, lambda s: oswald(s, 500), gw_ * data["prop"][j] - 5, 14, 9)
-                d.text((cx, yy + rh / 2), v, font=f, fill=soft, anchor="mm")
+                d.text((cx, yy + rh / 2), v, font=gf_reg, fill=soft, anchor="mm")
         prev_date = row[0]
 
     # 스폰서 / 푸터
@@ -111,8 +113,8 @@ def render(data, out="demo_EC.png"):
         draw_ls(d, (sx, spy), lab, noto(12, 600), acc, ls=1, anchor="la")
         d.text((sx, spy + 18), name, font=noto(15, 700), fill=hi, anchor="la")
         sx += measure(name, noto(15, 700))[0] + 44
-    d.text((MR, spy), data["venue_name"], font=noto(14, 700), fill=hi, anchor="ra")
-    d.text((MR, spy + 18), data["venue_addr"], font=noto(13, 400), fill=lo, anchor="ra")
+    d.text((MR, spy), data["venue_name"], font=noto(15, 700), fill=hi, anchor="ra")
+    d.text((MR, spy + 20), data["venue_addr"], font=noto(15, 400), fill=lo, anchor="ra")
 
     img.convert("RGB").save(out, quality=95); print("saved", out)
 

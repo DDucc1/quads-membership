@@ -36,8 +36,10 @@ _orig_text = ImageDraw.ImageDraw.text
 def _ptext(self, xy, text, *args, **kw):
     if ENABLED and text is not None and str(text).strip() and _on_canvas(self):
         try:
-            b = self.textbbox(xy, str(text), font=kw.get("font"), anchor=kw.get("anchor"))
-            BOXES.append({"k": "text", "t": str(text)[:26], "b": [float(v) for v in b]})
+            fnt = kw.get("font")
+            b = self.textbbox(xy, str(text), font=fnt, anchor=kw.get("anchor"))
+            BOXES.append({"k": "text", "t": str(text)[:26], "b": [float(v) for v in b],
+                          "fs": float(getattr(fnt, "size", 0)) or None})
         except Exception:
             pass
     return _orig_text(self, xy, text, *args, **kw)
@@ -97,6 +99,8 @@ def _merge_runs(boxes, gap=14.0):
                 hgap = max(a["b"][0], c["b"][0]) - min(a["b"][2], c["b"][2])
                 if hgap > gap:
                     continue
+                if a.get("fs") != c.get("fs"):
+                    a["fs"] = None
                 a["t"] = (a["t"] + c["t"])[:26]
                 a["b"] = [min(a["b"][0], c["b"][0]), min(a["b"][1], c["b"][1]),
                           max(a["b"][2], c["b"][2]), max(a["b"][3], c["b"][3])]
@@ -133,6 +137,23 @@ def check(boxes, W, H, tol=1.5, depth=3.0):
             ih = min(a[3], c[3]) - max(a[1], c[1])
             if iw > depth and ih > depth:
                 v.append(f"R3 OVERLAP '{bs[i]['t']}' × '{bs[j]['t']}' depth=({round(iw)},{round(ih)})")
+    # R4: 같은 행의 인접 텍스트인데 폰트 크기가 어중간하게 다름(의도된 위계 1.75x 이상은 허용)
+    for i in range(len(bs)):
+        for j in range(i + 1, len(bs)):
+            a, c = bs[i], bs[j]
+            fa, fc = a.get("fs"), c.get("fs")
+            if not fa or not fc or fa == fc:
+                continue
+            A, C = a["b"], c["b"]
+            ah = A[3] - A[1]; ch = C[3] - C[1]
+            if abs((A[1] + A[3]) / 2 - (C[1] + C[3]) / 2) > 0.35 * min(ah, ch):
+                continue
+            hgap = max(A[0], C[0]) - min(A[2], C[2])
+            if hgap <= 0 or hgap > 200:
+                continue
+            r = max(fa, fc) / min(fa, fc)
+            if 1.04 < r < 1.75:
+                v.append(f"R4 SIZE    '{a['t']}'({fa:g}) × '{c['t']}'({fc:g}) 같은 행 크기 불일치")
     return v
 
 def run(name, W, H, fn):
