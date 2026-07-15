@@ -132,14 +132,16 @@ def render(data, out="demo_E.png"):
     img.alpha_composite(gw.filter(ImageFilter.GaussianBlur(2)))
 
     d.line([(RAILX, 250), (RAILX, 1500)], fill=acc + (110,), width=2)
-    rt = vtext(f"POKER OF DREAMS — {data.get('rail','TOURNAMENT')}", oswald(15, 600), soft + (210,), ls=4)
+    rt = vtext(f"{data.get('logo_word','HOLDEM CLUB')} — {data.get('rail','TOURNAMENT')}", oswald(15, 600), soft + (210,), ls=4)
     img.alpha_composite(rt, (RAILX + 8, 250))
     # 인덱스 번호(디자인 디테일)
     d.text((RAILX + 8, 1540), data.get("idx", "01"), font=bebas(40), fill=acc + (200,), anchor="lm")
 
     # 상단바
-    d.text((ML, 80), "PoD", font=bebas(40), fill=hi, anchor="lm")
-    draw_ls(d, (ML + 70, 80), "POKER OF DREAMS", oswald(16, 600), lo, ls=3, anchor="lm")
+    mark = data.get("logo_mark", "RFK")
+    d.text((ML, 80), mark, font=bebas(40), fill=hi, anchor="lm")
+    mw0 = measure(mark, bebas(40))[0]
+    draw_ls(d, (ML + mw0 + 26, 80), data.get("logo_word", "HOLDEM CLUB"), oswald(16, 600), lo, ls=3, anchor="lm")
     draw_ls(d, (MR, 80), data.get("date_short", "26.07.04 SAT"), oswald(16, 500), soft, ls=4, anchor="rm")
     d.line([(ML, 120), (MR, 120)], fill=(255, 255, 255, 38), width=1)
 

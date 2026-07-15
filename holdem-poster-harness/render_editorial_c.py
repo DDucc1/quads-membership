@@ -39,8 +39,10 @@ def render(data, out="demo_EC.png"):
     img.alpha_composite(gw.filter(ImageFilter_safe()))
 
     # 상단바
-    d.text((ML, 78), "PoD", font=bebas(40), fill=hi, anchor="lm")
-    draw_ls(d, (ML + 70, 78), "POKER OF DREAMS", oswald(15, 600), lo, ls=3, anchor="lm")
+    mark = data.get("logo_mark", "RFK")
+    d.text((ML, 78), mark, font=bebas(40), fill=hi, anchor="lm")
+    mw0 = measure(mark, bebas(40))[0]
+    draw_ls(d, (ML + mw0 + 26, 78), data.get("logo_word", "HOLDEM CLUB"), oswald(15, 600), lo, ls=3, anchor="lm")
     draw_ls(d, (MR, 64), data["brand"], oswald(20, 700), hi, ls=3, anchor="ra")
     draw_ls(d, (MR, 92), data["period"], oswald(16, 500), soft, ls=3, anchor="ra")
     d.line([(ML, 120), (MR, 120)], fill=(255, 255, 255, 38), width=1)

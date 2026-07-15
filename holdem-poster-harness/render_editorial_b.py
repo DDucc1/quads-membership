@@ -23,8 +23,10 @@ def render(data, lv, out="demo_EB.png"):
     d = ImageDraw.Draw(img, "RGBA")
 
     # 상단바
-    d.text((ML, 78), "PoD", font=bebas(40), fill=hi, anchor="lm")
-    draw_ls(d, (ML + 70, 78), "POKER OF DREAMS", oswald(15, 600), lo, ls=3, anchor="lm")
+    mark = data.get("logo_mark", "RFK")
+    d.text((ML, 78), mark, font=bebas(40), fill=hi, anchor="lm")
+    mw0 = measure(mark, bebas(40))[0]
+    draw_ls(d, (ML + mw0 + 26, 78), data.get("logo_word", "HOLDEM CLUB"), oswald(15, 600), lo, ls=3, anchor="lm")
     draw_ls(d, (MR, 64), data["series"], oswald(20, 700), hi, ls=4, anchor="ra")
     d.text((MR, 92), data["total"], font=bebas(30), fill=gold, anchor="ra")
     draw_ls(d, (MR, 122), "TOTAL GUARANTEED", oswald(12, 500), soft, ls=3, anchor="ra")
