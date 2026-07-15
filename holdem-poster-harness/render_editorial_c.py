@@ -3,11 +3,11 @@
 """에디토리얼 크래프트 — C형(시리즈 스케줄 그리드). 프로스티드 그리드 + 날짜 그룹 + 거대 총보증."""
 import os, sys
 from PIL import Image, ImageDraw
-from render_poster import noto, measure, fit_font, draw_ls, lsw, text_img, theme_palette, ASSET
-from render_editorial import bebas, oswald, grade, frost, vtext, spade
+from render_poster import noto, measure, fit_font, draw_ls, lsw, text_img, theight, theme_palette, ASSET
+from render_editorial import bebas, oswald, grade, frost, vtext, spade, rect_blend
 
 W, H = 1080, 1860
-ML, MR, SAFE_B = 72, W - 64, H - 54
+ML, MR, SAFE_B = 72, W - 72, H - 54
 
 DATA = dict(
     theme="series_blue", series="DREAM SERIES", total="400,000,000",
@@ -51,10 +51,9 @@ def render(data, out="demo_EC.png"):
     draw_ls(d, (ML + 58, ky), data["kicker"], oswald(16, 600), acc, ls=5, anchor="lm")
     tf, _ = fit_font(data["series"], lambda s: bebas(s), MR - ML, 132, 90)
     d.text((ML, 198), data["series"], font=tf, fill=hi, anchor="la")
-    th = measure(data["series"], tf)[1]
-    gyl = 198 + th + 14
+    gyl = 198 + theight(data["series"], tf) + 14   # 어센더 포함 실높이(겹침 방지)
     draw_ls(d, (ML + 2, gyl), "TOTAL GUARANTEED", oswald(20, 600), lo, ls=6, anchor="la")
-    my = gyl + 30
+    my = gyl + theight("TOTAL GUARANTEED", oswald(20, 600)) + 8
     mf, _ = fit_font(data["total"], lambda s: bebas(s), MR - ML - 140, 150, 96)
     mi, mw, mh = text_img(data["total"], mf, (255, 255, 255), TH["gtd_lo"])
     img.alpha_composite(mi, (ML, int(my)))
@@ -63,7 +62,7 @@ def render(data, out="demo_EC.png"):
     d.line([(ML, ry), (MR, ry)], fill=(255, 255, 255, 44), width=1); d.line([(ML, ry), (ML + 90, ry)], fill=acc, width=3)
 
     # ===== 스케줄 그리드 (프로스티드) =====
-    gx0, gy0, gx1, gy1 = ML - 8, ry + 26, MR + 8, SAFE_B - 92
+    gx0, gy0, gx1, gy1 = ML - 4, ry + 26, MR + 4, SAFE_B - 100
     frost(img, (gx0, gy0, gx1, gy1), 16, acc, alpha=210, tab=False)
     inx0, inx1 = gx0 + 24, gx1 - 24; gw_ = inx1 - inx0
     cen = []; a = 0
@@ -82,7 +81,7 @@ def render(data, out="demo_EC.png"):
         new_grp = row[0] != prev_date
         if new_grp and i: d.line([(inx0, yy), (inx1, yy)], fill=(255, 255, 255, 40), width=1)
         elif i: d.line([(inx0 + gw_ * data["prop"][0], yy), (inx1, yy)], fill=(255, 255, 255, 16), width=1)
-        if i % 2 == 0: d.rectangle([inx0 - 8, yy, inx1 + 8, yy + rh], fill=(0, 0, 0, 60))
+        if i % 2 == 0: rect_blend(img, [inx0 - 8, yy, inx1 + 8, yy + rh], (0, 0, 0, 70))
         for j, (v, cx) in enumerate(zip(row, cen)):
             if j == 0:
                 if not new_grp: continue
@@ -103,14 +102,17 @@ def render(data, out="demo_EC.png"):
         prev_date = row[0]
 
     # 스폰서 / 푸터
-    spy = SAFE_B - 30
+    # 좌: 스폰서(최대 3구역) / 우: 지점명+주소 2행 — 세이프존 하단 내 수용
+    spy = SAFE_B - 44
     d.line([(ML, spy - 16), (MR, spy - 16)], fill=(255, 255, 255, 32), width=1)
     sx = ML
-    for lab, name in data["sponsors"]:
+    for lab, name in data["sponsors"][:3]:
+        if sx > MR - 460: break
         draw_ls(d, (sx, spy), lab, noto(12, 600), acc, ls=1, anchor="la")
-        d.text((sx, spy + 18), name, font=noto(16, 700), fill=hi, anchor="la")
-        sx += measure(name, noto(16, 700))[0] + 44
-    d.text((MR, spy + 10), f'{data["venue_name"]}  ·  {data["venue_addr"]}', font=noto(15, 400), fill=lo, anchor="ra")
+        d.text((sx, spy + 18), name, font=noto(15, 700), fill=hi, anchor="la")
+        sx += measure(name, noto(15, 700))[0] + 44
+    d.text((MR, spy), data["venue_name"], font=noto(14, 700), fill=hi, anchor="ra")
+    d.text((MR, spy + 18), data["venue_addr"], font=noto(13, 400), fill=lo, anchor="ra")
 
     img.convert("RGB").save(out, quality=95); print("saved", out)
 

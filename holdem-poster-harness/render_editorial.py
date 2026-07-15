@@ -7,10 +7,11 @@ B/C 렌더러는 이 모듈의 헬퍼를 import 한다.
 """
 import os, sys
 from PIL import Image, ImageDraw, ImageFilter, ImageEnhance, ImageFont, ImageChops
-from render_poster import noto, measure, fit_font, draw_ls, lsw, text_img, theme_palette, ASSET
+from render_poster import noto, measure, fit_font, draw_ls, lsw, text_img, theight, theme_palette, ASSET
 
 W, H = 1080, 1800
-ML, MR, RAILX, SAFE_B = 96, W - 70, 66, H - 54
+# QC 규격: 세이프존(좌 6%=65px) 안에 레일 텍스트까지 들어오도록 마진 재배치
+ML, MR, RAILX, SAFE_B = 124, W - 70, 70, H - 54
 
 # ---------- 폰트 ----------
 def bebas(s): return ImageFont.truetype(ASSET + "BebasNeue.ttf", s)
@@ -50,6 +51,21 @@ def grade(bg, acc, leak_xy=(0.82, 0.12)):
     grain = Image.effect_noise((Wd, Hd), 22).convert("L")
     img.alpha_composite(Image.merge("RGBA", (grain, grain, grain, Image.new("L", (Wd, Hd), 10))))
     return img
+
+def rect_blend(img, box, fill, radius=0):
+    """RGBA 캔버스에 '진짜 반투명' 사각형. (ImageDraw.rectangle은 알파를 SET해서
+    반투명 의도가 불투명으로 찍힌다 — zebra/강조행은 반드시 이걸로 그린다.)"""
+    x0, y0, x1, y1 = map(int, box)
+    w, h = x1 - x0, y1 - y0
+    if w <= 0 or h <= 0:
+        return
+    ov = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    od = ImageDraw.Draw(ov)
+    if radius:
+        od.rounded_rectangle([0, 0, w - 1, h - 1], radius, fill=fill)
+    else:
+        od.rectangle([0, 0, w - 1, h - 1], fill=fill)
+    img.alpha_composite(ov, (x0, y0))
 
 def spade(d, cx, cy, r, fill):
     d.pieslice([cx - r, cy - r, cx, cy + r * 0.2], 0, 360, fill=fill)
@@ -117,9 +133,9 @@ def render(data, out="demo_E.png"):
 
     d.line([(RAILX, 250), (RAILX, 1500)], fill=acc + (110,), width=2)
     rt = vtext(f"POKER OF DREAMS — {data.get('rail','TOURNAMENT')}", oswald(15, 600), soft + (210,), ls=4)
-    img.alpha_composite(rt, (RAILX - rt.width - 10, 250))
+    img.alpha_composite(rt, (RAILX + 8, 250))
     # 인덱스 번호(디자인 디테일)
-    d.text((RAILX - 6, 1540), data.get("idx", "01"), font=bebas(40), fill=acc + (200,), anchor="lm")
+    d.text((RAILX + 8, 1540), data.get("idx", "01"), font=bebas(40), fill=acc + (200,), anchor="lm")
 
     # 상단바
     d.text((ML, 80), "PoD", font=bebas(40), fill=hi, anchor="lm")
@@ -137,9 +153,9 @@ def render(data, out="demo_E.png"):
     ew, eh = measure(data["title"], ef)
     if data.get("accent"):
         d.text((ML + ew + 22, ey + eh * 0.30), data["accent"], font=noto(34, 500), fill=acc, anchor="la")
-    gy = ey + eh + 30
+    gy = ey + theight(data["title"], ef) + 24   # 어센더 포함 실높이 기준(겹침 방지)
     draw_ls(d, (ML + 3, gy), "TOTAL GUARANTEED", oswald(20, 600), lo, ls=6, anchor="la")
-    my = gy + 30
+    my = gy + theight("TOTAL GUARANTEED", oswald(20, 600)) + 8
     mf, msz = fit_font(data["gtd"], lambda s: bebas(s), MR - ML - 120, 210, 120)
     mi, mw, mh = text_img(data["gtd"], mf, (255, 255, 255), TH["gtd_lo"])
     ghst = mi.copy(); ghst.putalpha(mi.split()[3].point(lambda v: int(v * 0.22)))
@@ -150,7 +166,7 @@ def render(data, out="demo_E.png"):
     d.line([(ML, ry), (ML + 92, ry)], fill=acc, width=3)
 
     # 프로스티드 인포 카드
-    cx0, cy0, cx1, cy1 = 64, 656, W - 64, 1066
+    cx0, cy0, cx1, cy1 = 66, 656, W - 66, 1066
     frost(img, (cx0, cy0, cx1, cy1), 20, acc); pad = 40
     def kv(x, y, k, v, vw, kf_en=True):
         draw_ls(d, (x, y), k, oswald(15, 600), acc, ls=3, anchor="la")

@@ -67,6 +67,11 @@ def fit_font(t, fac, max_w, start, mn):
         if measure(t, fac(s))[0] <= max_w: return fac(s), s
         s -= 2
     return fac(mn), mn
+def theight(t, f):
+    """anchor='la'로 그렸을 때 실제 차지하는 세로 끝(y). measure()는 타이트박스라
+    어센더 오프셋을 놓쳐 아래 요소와 겹침을 유발한다 — 간격 계산은 반드시 이걸 쓴다."""
+    b = _sc.textbbox((0, 0), t, font=f)
+    return b[3]
 def lsw(t, f, ls):
     return sum(_sc.textlength(c, font=f) for c in t) + ls * max(0, len(t) - 1)
 def draw_ls(d, xy, t, f, fill, ls=0, anchor="la"):

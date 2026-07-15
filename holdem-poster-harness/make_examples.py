@@ -3,11 +3,9 @@
 """입력값만 바꿔 5장 예시 렌더 (인풋→아웃풋 검증). B 3장 + A 1장 + C 1장."""
 import os
 from PIL import Image, ImageDraw
-import render_poster as A0
+import qc
+A0, EA, EB, EC = qc.load()
 import render_poster_b as B0
-import render_editorial as EA
-import render_editorial_b as EB
-import render_editorial_c as EC
 from render_poster import noto
 
 os.makedirs("out/ex", exist_ok=True)
@@ -48,11 +46,14 @@ A1 = dict(A0.DATA, theme="flame_blue", title="CHALLENGE", accent="in 청주", gt
 # ---- C1: 시리즈 스케줄 (블루) ----
 C1 = dict(EC.DATA, theme="series_blue")
 
-EB.render(B1, B0.LV, "out/ex/1_MainEvent.png");   print("B1 done")
-EB.render(B2, B0.LV, "out/ex/2_HighRoller.png");  print("B2 done")
-EB.render(B3, B0.LV, "out/ex/3_DeepStack.png");   print("B3 done")
-EA.render(A1, "out/ex/4_Challenge.png");          print("A1 done")
-EC.render(C1, "out/ex/5_Series.png");             print("C1 done")
+fails = 0
+fails += len(qc.run("1_MainEvent", EB.W, EB.H, lambda: EB.render(B1, B0.LV, "out/ex/1_MainEvent.png")))
+fails += len(qc.run("2_HighRoller", EB.W, EB.H, lambda: EB.render(B2, B0.LV, "out/ex/2_HighRoller.png")))
+fails += len(qc.run("3_DeepStack", EB.W, EB.H, lambda: EB.render(B3, B0.LV, "out/ex/3_DeepStack.png")))
+fails += len(qc.run("4_Challenge", EA.W, EA.H, lambda: EA.render(A1, "out/ex/4_Challenge.png")))
+fails += len(qc.run("5_Series", EC.W, EC.H, lambda: EC.render(C1, "out/ex/5_Series.png")))
+qc.ENABLED = False
+print("QC TOTAL:", "ALL PASS ✅" if fails == 0 else f"{fails}건 위반 ❌")
 
 items=[("① MAIN EVENT 200M · B","out/ex/1_MainEvent.png"),
        ("② HIGH-ROLLER 100M · B","out/ex/2_HighRoller.png"),

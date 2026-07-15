@@ -3,12 +3,12 @@
 """에디토리얼 크래프트 — B형(스트럭처 시트). 프로스티드 표 패널 + 거대 머니 + 새 타이포."""
 import os, sys
 from PIL import Image, ImageDraw
-from render_poster import noto, measure, fit_font, draw_ls, lsw, text_img, theme_palette, ASSET
-from render_editorial import bebas, oswald, grade, frost, vtext, spade
+from render_poster import noto, measure, fit_font, draw_ls, lsw, text_img, theight, theme_palette, ASSET
+from render_editorial import bebas, oswald, grade, frost, vtext, spade, rect_blend
 import render_poster_b as B
 
 W, H = 1080, 1900
-ML, MR, SAFE_B = 80, W - 64, H - 56
+ML, MR, SAFE_B = 80, W - 72, H - 60
 
 def base_bg(theme, acc):
     p = f"{ASSET}bg/{theme}.jpg"
@@ -36,30 +36,32 @@ def render(data, lv, out="demo_EB.png"):
     ty = 192
     tf, _ = fit_font(data["title"], lambda s: bebas(s), MR - ML - 360, 92, 60)
     d.text((ML, ty), data["title"], font=tf, fill=hi, anchor="la")
-    th = measure(data["title"], tf)[1]
+    th = theight(data["title"], tf)          # 어센더 포함 실높이(겹침 방지)
     # 브랜드(우)
     draw_ls(d, (MR, ty + 8), data["brand"], oswald(26, 700), hi, ls=2, anchor="ra")
     d.text((MR, ty + 42), "★ ★ ★ ★", font=noto(15, 700), fill=gold, anchor="ra")
     draw_ls(d, (MR, ty + 70), data["date"], oswald(17, 500), soft, ls=1, anchor="ra")
-    # 거대 머니
-    gy = ty + th + 20
+    # 거대 머니 (BUY-IN은 아래 전용 행으로 이동 — 겹침 원천 차단)
+    gy = ty + max(th + 16, 120)
     draw_ls(d, (ML + 2, gy), "GUARANTEED PRIZE POOL", oswald(17, 600), lo, ls=5, anchor="la")
-    # BUY-IN (우, 머니 라벨 라인 — 거대 숫자와 충돌 방지)
-    draw_ls(d, (MR, gy - 16), "BUY-IN", oswald(13, 600), acc, ls=3, anchor="ra")
-    bf, _ = fit_font(data["buyin"], lambda s: noto(s, 900), 430, 28, 16)
-    d.text((MR, gy + 6), data["buyin"], font=bf, fill=hi, anchor="ra")
-    my = gy + 30
+    my = gy + theight("GUARANTEED PRIZE POOL", oswald(17, 600)) + 8
     mf, _ = fit_font(data["gtd"], lambda s: bebas(s), MR - ML - 150, 150, 96)
     mi, mw, mh = text_img(data["gtd"], mf, (255, 255, 255), TH["gtd_lo"])
     img.alpha_composite(mi, (ML, int(my)))
     d.text((ML + mw + 16, my + mh * 0.5), "GTD", font=oswald(36, 700), fill=gold, anchor="lm")
 
-    yb = my + mh + 22
+    yb = my + mh + 18
     d.line([(ML, yb), (MR, yb)], fill=(255, 255, 255, 44), width=1)
     d.line([(ML, yb), (ML + 90, yb)], fill=acc, width=3)
 
+    # BUY-IN 전용 행 (전폭 — 좌 라벨 + 값)
+    bi_y = yb + 16
+    draw_ls(d, (ML, bi_y + 8), "BUY-IN", oswald(14, 600), acc, ls=3, anchor="la")
+    bvf, _ = fit_font(data["buyin"], lambda s: noto(s, 800), MR - ML - 160, 26, 15)
+    d.text((ML + 118, bi_y), data["buyin"], font=bvf, fill=hi, anchor="la")
+
     # 스탯 4열 (프로스티드 스트립)
-    sy0 = yb + 18; sy1 = sy0 + 96
+    sy0 = bi_y + 48; sy1 = sy0 + 96
     frost(img, (ML, sy0, MR, sy1), 14, acc, tab=False)
     st = data["stats"]; n = len(st); cw = (MR - ML) / n
     for i, (lab, val) in enumerate(st):
@@ -71,7 +73,7 @@ def render(data, lv, out="demo_EB.png"):
         d.text((sx, sy0 + 50), val, font=vf, fill=hi, anchor="ma")
 
     # BODY: 좌 프라이즈 / 우 블라인드 (프로스티드 패널)
-    by0 = sy1 + 24; by1 = 1684
+    by0 = sy1 + 24; by1 = 1608   # Notice 4행 + 푸터가 세이프존 안에 들어오는 상한
     lw = 340
     frost(img, (ML, by0, ML + lw, by1), 16, acc)
     rx0 = ML + lw + 22
@@ -84,7 +86,7 @@ def render(data, lv, out="demo_EB.png"):
     py = by0 + 50; prh = (by1 - py - 16) / len(data["prizes"])
     for i, (rk, pz) in enumerate(data["prizes"]):
         yy = py + prh * i
-        if i % 2 == 0: d.rectangle([ML + 8, yy, ML + lw - 8, yy + prh], fill=(255, 255, 255, 12))
+        if i % 2 == 0: rect_blend(img, [ML + 8, yy, ML + lw - 8, yy + prh], (255, 255, 255, 16))
         big = i < 3
         d.text((ML + pad, yy + prh / 2), rk, font=oswald(15, 700 if big else 500),
                fill=gold if big else hi, anchor="lm")
@@ -106,12 +108,12 @@ def render(data, lv, out="demo_EB.png"):
         y += rh + 1; zi = 0
         for r in rows:
             if r[0] == "BRK":
-                d.rectangle([x0, y, x0 + gw, y + rh], fill=(acc[0], acc[1], acc[2], 70))
+                rect_blend(img, [x0, y, x0 + gw, y + rh], (acc[0], acc[1], acc[2], 95))
                 t = r[1]; f = oswald(13, 600)
                 if measure(t, f)[0] > gw - 10: f, _ = fit_font(t, lambda s: oswald(s, 600), gw - 10, 13, 9)
                 d.text((x0 + gw / 2, y + rh / 2), t, font=f, fill=hi, anchor="mm")
             else:
-                if zi % 2 == 0: d.rectangle([x0, y, x0 + gw, y + rh], fill=(255, 255, 255, 10))
+                if zi % 2 == 0: rect_blend(img, [x0, y, x0 + gw, y + rh], (255, 255, 255, 14))
                 for i, (v, cx) in enumerate(zip(r, cen)):
                     f = oswald(14, 600)
                     if measure(v, f)[0] > gw * prop[i] - 3: f, _ = fit_font(v, lambda s: oswald(s, 600), gw * prop[i] - 3, 14, 9)
@@ -130,14 +132,17 @@ def render(data, lv, out="demo_EB.png"):
             f = noto(14, 400)
             if measure("· " + line, f)[0] > colw - 20: f, _ = fit_font("· " + line, lambda s: noto(s, 400), colw - 20, 14, 11)
             d.text((bx2, yc), "·", font=f, fill=acc, anchor="la"); d.text((bx2 + 14, yc), line, font=f, fill=lo, anchor="la"); yc += lh
-    spy = SAFE_B - 30
+    # 좌: 스폰서(최대 3구역) / 우: 지점명+주소 2행 — 세이프존 하단 내 수용
+    spy = SAFE_B - 44
     d.line([(ML, spy - 14), (MR, spy - 14)], fill=(255, 255, 255, 32), width=1)
     sx = ML
-    for lab, name in data["sponsors"]:
+    for lab, name in data["sponsors"][:3]:
+        if sx > MR - 460: break
         draw_ls(d, (sx, spy), lab, noto(12, 600), acc, ls=1, anchor="la")
         d.text((sx, spy + 18), name, font=noto(15, 700), fill=hi, anchor="la")
         sx += measure(name, noto(15, 700))[0] + 40
-    d.text((MR, spy + 10), data["venue_addr"], font=noto(15, 400), fill=lo, anchor="ra")
+    d.text((MR, spy), data["venue_name"], font=noto(14, 700), fill=hi, anchor="ra")
+    d.text((MR, spy + 18), data["venue_addr"], font=noto(13, 400), fill=lo, anchor="ra")
 
     img.convert("RGB").save(out, quality=95); print("saved", out)
 
