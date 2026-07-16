@@ -6,7 +6,7 @@
 <meta name="description" content="포스터 스튜디오 — 홀덤펍 포스터 서비스 통합 앱 프로토타입">
 <title>포스터 스튜디오</title>
 <style>
-/* ── tokens: 딥 차콜 + 골드, 포스터가 주인공인 다크 스튜디오 ── */
+/* ── tokens ── */
 :root{
  --bg:#131211;--bg2:#181614;--panel:#1D1B18;--panel2:#242119;--hover:#282521;
  --border:#2E2B26;--border2:#3A362F;
@@ -70,7 +70,6 @@ input,select{font:inherit}
 .pcard .nm{font-size:.86rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pcard .mt{display:flex;gap:7px;align-items:center;font-size:.72rem;color:var(--faint);margin-top:3px}
 .badge{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--good)}
-.badge.draft{background:var(--faint)}
 .pcard.newcard{border-style:dashed;background:transparent;display:grid;place-items:center;min-height:100%;
  color:var(--faint);transition:color .15s,border-color .15s;cursor:pointer}
 .pcard.newcard:hover{color:var(--gold);border-color:var(--gold-dim);transform:none}
@@ -78,25 +77,66 @@ input,select{font:inherit}
 .pcard.newcard span{font-size:.84rem;font-weight:600;margin-top:6px;display:block}
 
 /* ── editor ── */
-.edwrap{display:grid;grid-template-columns:340px minmax(0,1fr);gap:26px;margin-top:24px;align-items:start}
-@media(max-width:860px){.edwrap{grid-template-columns:1fr}}
+.edwrap{display:grid;grid-template-columns:360px minmax(0,1fr);gap:26px;margin-top:24px;align-items:start}
+@media(max-width:880px){.edwrap{grid-template-columns:1fr}}
 .edhead{display:flex;align-items:center;gap:10px;margin:22px 0 0}
 .back{color:var(--muted);font-size:.86rem;padding:7px 12px;border-radius:var(--r-sm);transition:background .15s,color .15s}
 .back:hover{background:var(--panel2);color:var(--ink)}
 .edhead .ttl{font-weight:700;font-size:1.02rem}
 .edhead .sub{color:var(--faint);font-size:.8rem}
 
-.form{display:flex;flex-direction:column;gap:2px}
-.fld{padding:10px 12px;border-radius:var(--r-sm);transition:background .15s}
-.fld:focus-within{background:var(--panel)}
-.fld label{display:block;font-size:.7rem;font-weight:700;letter-spacing:.06em;color:var(--faint);margin-bottom:4px;text-transform:uppercase}
-.fld input{width:100%;background:transparent;border:0;border-bottom:1px solid var(--border);
+.fgroup{padding:12px 12px 4px;border-radius:var(--r-sm)}
+.fgroup>label{display:block;font-size:.7rem;font-weight:700;letter-spacing:.06em;color:var(--faint);
+ margin-bottom:7px;text-transform:uppercase}
+.fgroup>label i{font-style:normal;color:var(--faint);font-weight:500;letter-spacing:0;text-transform:none}
+.fgroup input.txt{width:100%;background:transparent;border:0;border-bottom:1px solid var(--border);
  color:var(--ink);padding:4px 0 7px;font-size:.95rem;transition:border-color .15s}
-.fld input:focus{outline:none;border-bottom-color:var(--gold)}
-.fld input::placeholder{color:var(--faint)}
-.frow{display:grid;grid-template-columns:1fr 1fr;gap:2px}
-.fnote{font-size:.74rem;color:var(--faint);padding:8px 12px 0}
-.fnote b{color:var(--muted);font-weight:600}
+.fgroup input.txt:focus{outline:none;border-bottom-color:var(--gold)}
+.fgroup input.txt::placeholder{color:var(--faint)}
+.chiprow{display:flex;flex-wrap:wrap;gap:6px}
+.fchip{padding:7px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--panel);
+ font-size:.84rem;color:var(--muted);transition:border-color .15s,color .15s,background .15s;
+ font-variant-numeric:tabular-nums}
+.fchip:hover{background:var(--hover);color:var(--ink)}
+.fchip[aria-pressed="true"]{border-color:var(--gold);color:var(--gold2);
+ background:color-mix(in srgb,var(--gold) 9%,var(--panel));font-weight:700}
+.fchip.custom-in{padding:0;border-color:var(--gold)}
+.fchip.custom-in input{background:transparent;border:0;color:var(--gold2);width:92px;
+ padding:7px 13px;font-size:.84rem;font-weight:700}
+.fchip.custom-in input:focus{outline:none}
+
+details.preset{margin:14px 12px 0;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel)}
+details.preset summary{list-style:none;cursor:pointer;padding:11px 14px;font-size:.82rem;color:var(--muted);
+ display:flex;align-items:center;gap:8px}
+details.preset summary::-webkit-details-marker{display:none}
+details.preset summary .ok{color:var(--good);font-weight:700}
+details.preset summary::after{content:"펼치기";margin-left:auto;font-size:.72rem;color:var(--faint)}
+details.preset[open] summary::after{content:"접기"}
+details.preset .inner{padding:2px 14px 13px;font-size:.82rem;color:var(--muted);display:grid;
+ grid-template-columns:96px 1fr;gap:4px 10px}
+details.preset .inner .k{color:var(--faint)}
+
+/* extras (slots) */
+details.extras{margin:14px 12px 0;border:1px dashed var(--border2);border-radius:var(--r-sm)}
+details.extras summary{list-style:none;cursor:pointer;padding:11px 14px;font-size:.84rem;font-weight:600;color:var(--muted)}
+details.extras summary::-webkit-details-marker{display:none}
+details.extras summary::before{content:"+";color:var(--gold);font-weight:800;margin-right:8px}
+details.extras[open] summary::before{content:"–"}
+details.extras .inner{padding:0 14px 14px}
+.slotlbl{font-size:.7rem;font-weight:700;letter-spacing:.06em;color:var(--faint);text-transform:uppercase;margin:8px 0 7px}
+.sprow{display:flex;gap:6px}
+.sprow input{flex:1;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);
+ color:var(--ink);padding:8px 12px;font-size:.85rem}
+.sprow input:focus{outline:none;border-color:var(--gold)}
+.sprow button{padding:8px 14px;border-radius:var(--r-sm);background:var(--panel2);border:1px solid var(--border2);
+ font-size:.82rem;font-weight:700;color:var(--muted)}
+.sprow button:hover{color:var(--gold);border-color:var(--gold-dim)}
+.sptags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.sptag{display:flex;align-items:center;gap:6px;padding:5px 8px 5px 12px;border-radius:16px;
+ background:var(--panel2);border:1px solid var(--border2);font-size:.78rem;color:var(--ink)}
+.sptag button{color:var(--faint);font-size:.9rem;line-height:1;padding:2px 4px}
+.sptag button:hover{color:var(--danger)}
+.slotnote{font-size:.72rem;color:var(--faint);margin-top:7px}
 
 .pubrow{display:flex;gap:10px;margin-top:20px;padding:0 12px}
 .pub{flex:1;padding:13px 0;border-radius:var(--r-sm);background:var(--gold);color:#1A1508;font-weight:800;
@@ -107,14 +147,25 @@ input,select{font:inherit}
 
 /* preview side */
 .pvside{display:flex;flex-direction:column;gap:14px;min-width:0}
+.pvctl{display:flex;flex-direction:column;gap:10px}
+.pvctl .lbl{font-size:.7rem;font-weight:700;letter-spacing:.08em;color:var(--faint);text-transform:uppercase}
 .stylerow{display:flex;gap:10px}
-.styleth{width:74px;border-radius:var(--r-sm);overflow:hidden;border:2px solid var(--border);
+.styleth{width:72px;border-radius:var(--r-sm);overflow:hidden;border:2px solid var(--border);
  transition:border-color .15s,transform .15s;padding:0;position:relative}
 .styleth:hover{transform:translateY(-2px)}
 .styleth[aria-pressed="true"]{border-color:var(--gold)}
 .styleth .poster{border-radius:0;pointer-events:none}
 .styleth .snm{position:absolute;left:0;right:0;bottom:0;font-size:.58rem;font-weight:700;text-align:center;
  padding:3px 0;background:rgba(10,8,6,.75);color:var(--ink);letter-spacing:.04em}
+.bgrow{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.bgth{flex:none;width:56px;height:70px;border-radius:var(--r-sm);border:2px solid var(--border);
+ padding:0;position:relative;overflow:hidden;transition:border-color .15s,transform .15s}
+.bgth:hover{transform:translateY(-2px)}
+.bgth[aria-pressed="true"]{border-color:var(--gold)}
+.bgth .bnm{position:absolute;left:0;right:0;bottom:0;font-size:.54rem;font-weight:700;text-align:center;
+ padding:2px 0;background:rgba(10,8,6,.72);color:var(--ink)}
+.bgfree{font-size:.72rem;color:var(--faint)}
+.bgfree b{color:var(--muted);font-weight:600}
 .pvframe{position:relative;max-width:430px}
 .pvframe .poster{box-shadow:0 24px 60px -18px rgba(0,0,0,.65)}
 .qcsweep{position:absolute;inset:0;border-radius:14px;overflow:hidden;pointer-events:none;opacity:0;transition:opacity .2s}
@@ -122,19 +173,13 @@ input,select{font:inherit}
 .qcsweep .line{position:absolute;left:0;right:0;height:2px;background:var(--gold2);
  box-shadow:0 0 18px 4px color-mix(in srgb,var(--gold2) 55%,transparent);animation:sweep 1s var(--ease)}
 @keyframes sweep{from{top:0}to{top:100%}}
-.pvhint{font-size:.75rem;color:var(--faint)}
-.pvhint b{color:var(--muted);font-weight:600}
 
 /* ── poster ── */
 .poster{aspect-ratio:4/5;border-radius:14px;overflow:hidden;position:relative;color:#fff;
- display:flex;flex-direction:column;padding:7.5% 8.5%;isolation:isolate}
-.poster::before{content:"";position:absolute;inset:0;z-index:-1;
- background:
-  radial-gradient(120% 70% at 78% -8%,var(--p-hi) 0%,transparent 55%),
-  radial-gradient(140% 90% at 10% 108%,rgba(0,0,0,.55),transparent 60%),
-  linear-gradient(158deg,var(--p-g1) 12%,var(--p-g2) 88%)}
+ display:flex;flex-direction:column;padding:7.5% 8.5%;isolation:isolate;background:#111}
+.poster .bglayer{position:absolute;inset:0;z-index:-2}
 .poster::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
- background:radial-gradient(95% 95% at 50% 45%,transparent 55%,rgba(0,0,0,.4) 100%)}
+ background:radial-gradient(95% 95% at 50% 45%,transparent 55%,rgba(0,0,0,.42) 100%)}
 .poster .wm{position:absolute;z-index:-1;right:-14%;bottom:-9%;width:68%;opacity:.09}
 .poster .brandrow{display:flex;align-items:center;gap:8px;font-size:.6rem;font-weight:700;
  letter-spacing:.26em;text-transform:uppercase;opacity:.9}
@@ -156,24 +201,29 @@ input,select{font:inherit}
 .poster .m b{display:block;font-size:.78rem;font-variant-numeric:tabular-nums;letter-spacing:.02em}
 .poster .m span{font-size:.48rem;opacity:.6;letter-spacing:.18em;text-transform:uppercase}
 .poster .note{margin-top:12px;text-align:center;font-size:.56rem;opacity:.82;letter-spacing:.04em}
+.poster .sprail{margin-top:11px;display:flex;align-items:center;justify-content:center;gap:9px;
+ font-size:.44rem;letter-spacing:.2em;text-transform:uppercase;color:var(--p-ac);opacity:.72}
+.poster .sprail .wth{opacity:.55;letter-spacing:.3em}
+.poster .sprail i{font-style:normal;opacity:.4}
 .poster .foot{margin-top:9px;text-align:center;font-size:.48rem;opacity:.5;letter-spacing:.22em;text-transform:uppercase}
 /* variants */
 .poster.v-left .datechip,.poster.v-left .ttl{text-align:left}
 .poster.v-left .gtd{text-align:left}
 .poster.v-left .gtd b{font-size:1.5rem}
 .poster.v-left .note,.poster.v-left .foot{text-align:left}
+.poster.v-left .sprail{justify-content:flex-start}
 .poster.v-center{text-align:center}
 .poster.v-center .brandrow{justify-content:center}
 .poster.v-center .brandrow::after{display:none}
 .poster.v-stack .ttl{font-size:2.3rem}
 .poster.v-stack .gtd{border:0;padding:8px 0 0}
 .poster.v-stack .gtd b{font-size:2.1rem}
-/* editable highlight (editor only) */
+/* editable highlight */
 .poster [data-fld]{cursor:pointer;border-radius:3px;transition:box-shadow .15s}
 .poster [data-fld]:hover{box-shadow:0 0 0 1.5px color-mix(in srgb,var(--p-ac) 80%,transparent)}
 .poster .bump{animation:bump .5s var(--ease)}
 @keyframes bump{0%{opacity:.2}100%{opacity:1}}
-/* small poster in cards */
+/* small poster in cards/thumbs */
 .pcard .poster{border-radius:0;font-size:.62em}
 .pcard .poster .ttl{font-size:1.15rem}
 .pcard .poster.v-stack .ttl{font-size:1.3rem}
@@ -244,28 +294,60 @@ input,select{font:inherit}
   </div>
   <div class="edwrap">
     <div>
-      <div class="form">
-        <div class="fld"><label for="fTitle">대회명</label><input id="fTitle" data-k="title" placeholder="위클리 메인 이벤트"></div>
-        <div class="frow">
-          <div class="fld"><label for="fDate">날짜</label><input id="fDate" data-k="date" placeholder="7월 19일 (토)"></div>
-          <div class="fld"><label for="fTime">시작</label><input id="fTime" data-k="time" placeholder="19:00"></div>
-        </div>
-        <div class="frow">
-          <div class="fld"><label for="fGtd">개런티</label><input id="fGtd" data-k="gtd" placeholder="300만"></div>
-          <div class="fld"><label for="fBuyin">바이인</label><input id="fBuyin" data-k="buyin" placeholder="5만"></div>
-        </div>
-        <div class="fld"><label for="fNote">한 줄 안내 <span style="text-transform:none;letter-spacing:0">— 선택</span></label><input id="fNote" data-k="note" placeholder="사전 등록 시 스택 추가"></div>
+      <div class="fgroup">
+        <label for="fTitle">대회명</label>
+        <input class="txt" id="fTitle" list="dlTitles" placeholder="위클리 메인 이벤트" autocomplete="off">
+        <datalist id="dlTitles"></datalist>
       </div>
-      <p class="fnote">블라인드 구조·매장 정보·스타일은 <b>하우스 설정</b>을 따라 자동 구성됩니다. 포스터에서 글자를 바로 클릭해도 수정됩니다.</p>
+      <div class="fgroup"><label>날짜</label><div class="chiprow" id="cgDate"></div></div>
+      <div class="fgroup"><label>시작 시간</label><div class="chiprow" id="cgTime"></div></div>
+      <div class="fgroup"><label>바이인</label><div class="chiprow" id="cgBuyin"></div></div>
+      <div class="fgroup"><label>개런티</label><div class="chiprow" id="cgGtd"></div></div>
+      <div class="fgroup">
+        <label for="fNote">한 줄 안내 <i>— 비우면 표시 안 됨</i></label>
+        <input class="txt" id="fNote" placeholder="사전 등록 시 스택 추가" autocomplete="off">
+      </div>
+
+      <details class="preset">
+        <summary><span class="ok">자동 구성</span>블라인드 구조 · 상금 분배 — 정규 구조를 따릅니다</summary>
+        <div class="inner">
+          <span class="k">구조 프리셋</span><span>정규 A — 스타팅 30,000 · 레벨 15분</span>
+          <span class="k">블라인드</span><span>LV1 100/200 → LV12 3,000/6,000</span>
+          <span class="k">상금 분배</span><span>개런티 기준 1위 40% · 2위 25% · 3위 15% · 4–6위 잔여</span>
+          <span class="k">규정</span><span>리엔트리 1회 · 레이트 등록 LV6</span>
+        </div>
+      </details>
+
+      <details class="extras">
+        <summary>추가 요소 — 후원 로고 · 게스트 · QR</summary>
+        <div class="inner">
+          <div class="slotlbl">후원사 로고 레일</div>
+          <div class="sprow">
+            <input id="spName" placeholder="후원사 이름 입력" autocomplete="off">
+            <button id="spAdd">추가</button>
+          </div>
+          <div class="sptags" id="spTags"></div>
+          <p class="slotnote">하단 전용 슬롯에 단색 워드마크로 자동 정렬됩니다. 로고 파일은 실서비스에서 업로드로 대체.</p>
+          <div class="slotlbl" style="margin-top:14px">게스트 초대 · 예약 QR</div>
+          <p class="slotnote">게스트(인플루언서) 사진 히어로, 예약 QR 슬롯 — 프로토타입 다음 단계.</p>
+        </div>
+      </details>
+
       <div class="pubrow"><button class="pub" id="btnPub">발행</button></div>
     </div>
+
     <div class="pvside">
-      <div class="stylerow" id="styleRow"></div>
+      <div class="pvctl">
+        <span class="lbl">구도</span>
+        <div class="stylerow" id="styleRow"></div>
+        <span class="lbl" style="margin-top:4px">배경 컨셉 <i style="font-style:normal;color:var(--faint);font-weight:500;letter-spacing:0;text-transform:none">— 제한 없음, 계속 추가됨</i></span>
+        <div class="bgrow" id="bgRow"></div>
+        <p class="bgfree"><b>배경·특수 디자인은 규율 밖 자유 영역입니다.</b> 사진·일러스트·커스텀 아트 무엇이든 컨셉으로 등록될 수 있고, 구조·글자 규격만 검수를 거칩니다.</p>
+      </div>
       <div class="pvframe">
         <div class="poster" id="pv"></div>
         <div class="qcsweep" id="qcs"><div class="line"></div></div>
       </div>
-      <p class="pvhint"><b>발행하면</b> 규격 검수(글자 잘림·겹침·크기)를 통과한 이미지가 인스타·카카오톡 사이즈로 함께 생성됩니다.</p>
     </div>
   </div>
 </section>
@@ -289,7 +371,7 @@ input,select{font:inherit}
 (function(){
 "use strict";
 
-/* ── data ── */
+/* ── brand data ── */
 var EMB={
  spade:{nm:"스페이드",d:"M19 4C13 12 7 15 7 21c0 4 3 7 7 7 1.6 0 3.1-.5 4-1.4V30c0 2-1 3.4-3 4h8c-2-.6-3-2-3-4v-3.4c.9.9 2.4 1.4 4 1.4 4 0 7-3 7-7 0-6-6-9-12-17z"},
  crown:{nm:"크라운",d:"M6 26l-2-14 8 6 7-10 7 10 8-6-2 14H6zm0 3h26v4H6z"},
@@ -313,35 +395,60 @@ var TYPO={
 };
 var VAR=[{id:"v-center",nm:"센터"},{id:"v-left",nm:"스플릿"},{id:"v-stack",nm:"볼드"}];
 
+/* ── 배경 컨셉: 자유 영역. 팔레트를 받아 전혀 다른 무드를 만든다 ── */
+var GRAIN='url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'160\' height=\'160\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'.9\' numOctaves=\'2\'/%3E%3CfeColorMatrix values=\'0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0\'/%3E%3C/filter%3E%3Crect width=\'160\' height=\'160\' filter=\'url(%23n)\'/%3E%3C/svg%3E")';
+var BG={
+ deep:{nm:"딥",css:function(p){return "radial-gradient(120% 70% at 78% -8%,"+p.hi+" 0%,transparent 55%),radial-gradient(140% 90% at 10% 108%,rgba(0,0,0,.55),transparent 60%),linear-gradient(158deg,"+p.g1+" 12%,"+p.g2+" 88%)";}},
+ spotlight:{nm:"스포트",css:function(p){return "radial-gradient(52% 40% at 50% 16%,"+p.hi+" 0%,transparent 72%),radial-gradient(80% 60% at 50% 118%,rgba(0,0,0,.72),transparent 65%),linear-gradient(180deg,"+p.g2+" 0%,"+p.g1+" 62%,#07070a 100%)";}},
+ rays:{nm:"레이",css:function(p){return "repeating-conic-gradient(from -10deg at 50% 26%,rgba(255,255,255,.07) 0 5deg,transparent 5deg 13deg),radial-gradient(90% 55% at 50% 20%,"+p.hi+",transparent 65%),linear-gradient(170deg,"+p.g2+" 0%,"+p.g1+" 80%)";}},
+ bokeh:{nm:"보케",css:function(p){return "radial-gradient(9% 7% at 18% 22%,"+p.hi+" 0%,transparent 100%),radial-gradient(13% 10% at 82% 14%,"+p.hi+" 0%,transparent 100%),radial-gradient(7% 5% at 68% 38%,rgba(255,255,255,.16),transparent 100%),radial-gradient(11% 8% at 30% 66%,"+p.hi+",transparent 100%),radial-gradient(6% 4% at 88% 58%,rgba(255,255,255,.13),transparent 100%),radial-gradient(15% 11% at 8% 88%,"+p.hi+",transparent 100%),linear-gradient(150deg,"+p.g1+" 0%,"+p.g2+" 60%,"+p.g1+" 100%)";}},
+ halftone:{nm:"하프톤",css:function(p){return "radial-gradient(circle at 2px 2px,rgba(255,255,255,.13) 1.2px,transparent 1.8px) 0 0/13px 13px,radial-gradient(110% 70% at 50% -10%,"+p.hi+",transparent 60%),linear-gradient(160deg,"+p.g2+" 0%,"+p.g1+" 85%)";}},
+ geo:{nm:"기하",css:function(p){return "repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 2px,transparent 2px 26px),repeating-linear-gradient(45deg,rgba(0,0,0,.18) 0 2px,transparent 2px 34px),linear-gradient(120deg,"+p.g1+" 0%,"+p.g2+" 55%,"+p.g1+" 100%)";}},
+ neon:{nm:"네온",css:function(p){return "linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px) 0 0/100% 34px,linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px) 0 0/34px 100%,radial-gradient(70% 45% at 50% 108%,"+p.hi+",transparent 70%),linear-gradient(180deg,#0a0a10 0%,"+p.g1+" 55%,"+p.g2+" 130%)";}},
+ felt:{nm:"펠트",css:function(p){return GRAIN+",radial-gradient(75% 55% at 50% 34%,"+p.g2+" 0%,"+p.g1+" 78%,#060707 120%)";}}
+};
+var BGKEYS=Object.keys(BG);
+
 var kit={emb:"spade",pal:"midnight",typo:"condensed"};
 
 var posters=[
- {id:1,title:"위클리 메인 이벤트",date:"7월 12일 (토)",time:"19:00",gtd:"300만",buyin:"5만",note:"사전 등록 시 스택 추가",v:"v-center",pub:"7월 10일 발행"},
- {id:2,title:"데일리 터보",date:"7월 16일 (수)",time:"20:00",gtd:"100만",buyin:"3만",note:"",v:"v-left",pub:"7월 14일 발행"},
- {id:3,title:"월간 챔피언십",date:"6월 29일 (일)",time:"18:00",gtd:"1,000만",buyin:"10만",note:"역대 최대 개런티",v:"v-stack",pub:"6월 20일 발행"},
- {id:4,title:"데일리 딥스택",date:"7월 11일 (금)",time:"20:30",gtd:"150만",buyin:"3만",note:"",v:"v-center",pub:"7월 9일 발행"}
+ {id:1,title:"위클리 메인 이벤트",date:"7월 12일 (토)",time:"19:00",gtd:"300만",buyin:"5만",note:"사전 등록 시 스택 추가",v:"v-center",bg:"deep",sponsors:[],pub:"7월 10일 발행"},
+ {id:2,title:"데일리 터보",date:"7월 15일 (수)",time:"20:00",gtd:"100만",buyin:"3만",note:"",v:"v-left",bg:"rays",sponsors:[],pub:"7월 13일 발행"},
+ {id:3,title:"월간 챔피언십",date:"6월 28일 (일)",time:"18:00",gtd:"1,000만",buyin:"10만",note:"역대 최대 개런티",v:"v-stack",bg:"spotlight",sponsors:["레이즈바","칩스토어"],pub:"6월 19일 발행"},
+ {id:4,title:"데일리 딥스택",date:"7월 10일 (금)",time:"20:30",gtd:"150만",buyin:"3만",note:"",v:"v-center",bg:"felt",sponsors:[],pub:"7월 8일 발행"}
 ];
 var nextId=5;
 
 /* editor state */
-var cur=null;      // working copy
-var curSrc=null;   // id if editing existing, null if new
-var curVar="v-center";
+var cur=null,curSrc=null,curVar="v-center";
 
-/* ── poster render ── */
+/* ── helpers ── */
 function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;");}
 function embSVG(color,cls){return '<svg class="'+(cls||"")+'" viewBox="0 0 38 38" aria-hidden="true"><path d="'+EMB[kit.emb].d+'" fill="'+color+'"/></svg>';}
+var WD=["일","월","화","수","목","금","토"];
+function fmtDate(d){return (d.getMonth()+1)+"월 "+d.getDate()+"일 ("+WD[d.getDay()]+")";}
+function upcoming(dow,plus){ /* 다음 dow 요일 (+plus주) */
+ var d=new Date();var diff=(dow-d.getDay()+7)%7;if(diff===0)diff=7;
+ d.setDate(d.getDate()+diff+(plus||0)*7);return d;
+}
+function bumpDate(s){
+ var m=/^(\d+)월 (\d+)일(.*)$/.exec(s||"");
+ if(!m)return s;
+ var mo=+m[1],da=+m[2]+7,days=[31,28,31,30,31,30,31,31,30,31,30,31];
+ if(da>days[mo-1]){da-=days[mo-1];mo=mo%12+1;}
+ return mo+"월 "+da+"일"+m[3];
+}
+
+/* ── poster render ── */
 function renderPoster(el,d,v,editable){
- var p=PAL[kit.pal],t=TYPO[kit.typo];
+ var p=PAL[kit.pal],t=TYPO[kit.typo],bg=BG[d.bg]||BG.deep;
  el.className="poster "+v;
- el.style.setProperty("--p-g1",p.g1);
- el.style.setProperty("--p-g2",p.g2);
- el.style.setProperty("--p-hi",p.hi);
  el.style.setProperty("--p-ac",p.ac);
- var f=function(k,inner,tag,cls){
-  tag=tag||"span";
-  return "<"+tag+(cls?' class="'+cls+'"':"")+(editable?' data-fld="'+k+'"':"")+">"+inner+"</"+tag+">";
- };
+ var f=function(k,inner){return "<span"+(editable?' data-fld="'+k+'"':"")+">"+inner+"</span>";};
+ var sp="";
+ if(d.sponsors&&d.sponsors.length){
+  sp='<div class="sprail"><span class="wth">With</span>'+d.sponsors.map(function(s){return "<span>"+esc(s)+"</span>";}).join("<i>·</i>")+"</div>";
+ }
  el.innerHTML=embSVG(p.ac,"wm")
   +'<div class="brandrow">'+embSVG(p.ac)+'<span>블러프 홀덤펍</span></div>'
   +'<div class="datechip">'+f("date",esc(d.date||"날짜"))+' · '+f("time",esc(d.time||"시간"))+'</div>'
@@ -353,16 +460,81 @@ function renderPoster(el,d,v,editable){
   +'<div class="m"><b>15분</b><span>Level</span></div>'
   +'</div>'
   +(d.note?'<div class="note">'+f("note",esc(d.note))+'</div>':"")
+  +sp
   +'<div class="foot">@bluff_holdem · 매주 목–일</div>';
+ var bl=document.createElement("div");
+ bl.className="bglayer";
+ bl.style.background=bg.css(p);
+ el.insertBefore(bl,el.firstChild);
  if(editable){
   el.querySelectorAll("[data-fld]").forEach(function(s){
    s.addEventListener("click",function(){
-    var inp=document.querySelector('.fld input[data-k="'+s.dataset.fld+'"]');
-    if(inp){inp.focus();inp.select();}
+    var k=s.dataset.fld;
+    var t2=document.getElementById(k==="title"?"fTitle":k==="note"?"fNote":"");
+    if(t2){t2.focus();t2.select&&t2.select();return;}
+    var g={date:"cgDate",time:"cgTime",buyin:"cgBuyin",gtd:"cgGtd"}[k];
+    if(g)document.getElementById(g).scrollIntoView({behavior:"smooth",block:"center"});
    });
   });
  }
 }
+
+/* ── chip groups ── */
+var CHIPS={
+ date:{el:"cgDate",vals:function(){return [fmtDate(upcoming(6)),fmtDate(upcoming(0)),fmtDate(upcoming(6,1)),fmtDate(upcoming(5))];}},
+ time:{el:"cgTime",vals:function(){return ["19:00","20:00","21:00"];}},
+ buyin:{el:"cgBuyin",vals:function(){return ["3만","5만","10만"];}},
+ gtd:{el:"cgGtd",vals:function(){return ["100만","300만","500만","1,000만"];}}
+};
+function drawChips(key){
+ var cfg=CHIPS[key],box=document.getElementById(cfg.el);
+ box.innerHTML="";
+ var vals=cfg.vals();
+ var isCustom=cur[key]&&vals.indexOf(cur[key])<0;
+ vals.forEach(function(v){
+  var b=document.createElement("button");
+  b.className="fchip";b.textContent=v;
+  b.setAttribute("aria-pressed",cur[key]===v?"true":"false");
+  b.addEventListener("click",function(){cur[key]=v;drawChips(key);drawPv();});
+  box.appendChild(b);
+ });
+ var c=document.createElement("button");
+ if(isCustom){
+  c.className="fchip custom-in";
+  var inp=document.createElement("input");
+  inp.value=cur[key];inp.setAttribute("aria-label",key+" 직접 입력");
+  inp.addEventListener("input",function(){cur[key]=inp.value;drawPv();});
+  inp.addEventListener("blur",function(){if(!inp.value){cur[key]="";}drawChips(key);drawPv();});
+  c.appendChild(inp);
+  box.appendChild(c);
+  if(document.activeElement!==inp&&box.dataset.wantfocus==="1"){inp.focus();box.dataset.wantfocus="";}
+ }else{
+  c.className="fchip";c.textContent="직접 입력";
+  c.setAttribute("aria-pressed","false");
+  c.addEventListener("click",function(){drawChipsCustom(key);});
+  box.appendChild(c);
+ }
+}
+function drawChipsCustom(key){
+ /* 직접 입력 진입: 값을 빈 커스텀으로 전환 */
+ cur[key]=cur[key]&&cur[key].trim()?cur[key]:"";
+ var cfg=CHIPS[key],box=document.getElementById(cfg.el);
+ box.innerHTML="";
+ cfg.vals().forEach(function(v){
+  var b=document.createElement("button");
+  b.className="fchip";b.textContent=v;b.setAttribute("aria-pressed","false");
+  b.addEventListener("click",function(){cur[key]=v;drawChips(key);drawPv();});
+  box.appendChild(b);
+ });
+ var c=document.createElement("button");c.className="fchip custom-in";
+ var inp=document.createElement("input");
+ inp.placeholder="직접 입력";
+ inp.addEventListener("input",function(){cur[key]=inp.value;drawPv();});
+ inp.addEventListener("blur",function(){drawChips(key);drawPv();});
+ c.appendChild(inp);box.appendChild(c);
+ inp.focus();
+}
+function drawAllChips(){["date","time","buyin","gtd"].forEach(drawChips);}
 
 /* ── home ── */
 function drawHome(){
@@ -387,14 +559,16 @@ function drawHome(){
   acts.appendChild(b1);acts.appendChild(b2);
   th.appendChild(acts);
   c.appendChild(th);
-  c.innerHTML+='<div class="info"><div class="nm">'+esc(p.title)+'</div><div class="mt"><span class="badge"></span>'+esc(p.date)+' · '+esc(p.pub)+'</div></div>';
-  /* innerHTML+= kills listeners on th — rebind */
-  var th2=c.querySelector(".thumb");
-  th2.querySelectorAll(".acts button")[0].addEventListener("click",function(){openEditor(p,true);});
-  th2.querySelectorAll(".acts button")[1].addEventListener("click",function(){openEditor(p,false);});
+  var info=document.createElement("div");info.className="info";
+  info.innerHTML='<div class="nm">'+esc(p.title)+'</div><div class="mt"><span class="badge"></span>'+esc(p.date)+' · '+esc(p.pub)+'</div>';
+  c.appendChild(info);
   g.appendChild(c);
  });
  document.getElementById("cnt").textContent=posters.length+"장";
+ var dl=document.getElementById("dlTitles");
+ dl.innerHTML="";
+ var seen={};
+ posters.forEach(function(p){if(!seen[p.title]){seen[p.title]=1;var o=document.createElement("option");o.value=p.title;dl.appendChild(o);}});
 }
 
 /* ── views ── */
@@ -406,39 +580,34 @@ function showView(id){
 }
 
 /* ── editor ── */
-function bumpDate(s){
- var m=/^(\d+)월 (\d+)일(.*)$/.exec(s||"");
- if(!m)return s;
- var mo=+m[1],da=+m[2]+7,days=[31,28,31,30,31,30,31,31,30,31,30,31];
- if(da>days[mo-1]){da-=days[mo-1];mo=mo%12+1;}
- return mo+"월 "+da+"일"+m[3];
-}
 function openEditor(src,dup){
- if(!src){cur={title:"",date:"",time:"",gtd:"",buyin:"",note:""};curSrc=null;curVar="v-center";
+ if(!src){
+  cur={title:"",date:"",time:"19:00",gtd:"",buyin:"",note:"",bg:"deep",sponsors:[]};
+  curSrc=null;curVar="v-center";
   document.getElementById("edTitle").textContent="새 포스터";
   document.getElementById("edSub").textContent="";
  }else if(dup){
-  cur={title:src.title,date:bumpDate(src.date),time:src.time,gtd:src.gtd,buyin:src.buyin,note:src.note};
+  cur={title:src.title,date:bumpDate(src.date),time:src.time,gtd:src.gtd,buyin:src.buyin,note:src.note,bg:src.bg,sponsors:src.sponsors.slice()};
   curSrc=null;curVar=src.v;
   document.getElementById("edTitle").textContent=src.title;
-  document.getElementById("edSub").textContent="지난 포스터 이어받음 — 날짜는 다음 주로 옮겨뒀습니다";
+  document.getElementById("edSub").textContent="이어받음 — 날짜는 다음 주로 옮겨뒀습니다";
  }else{
-  cur={title:src.title,date:src.date,time:src.time,gtd:src.gtd,buyin:src.buyin,note:src.note};
+  cur={title:src.title,date:src.date,time:src.time,gtd:src.gtd,buyin:src.buyin,note:src.note,bg:src.bg,sponsors:src.sponsors.slice()};
   curSrc=src.id;curVar=src.v;
   document.getElementById("edTitle").textContent=src.title;
   document.getElementById("edSub").textContent="발행본 수정 — 재발행하면 게시물 이미지가 교체됩니다";
  }
- document.querySelectorAll(".fld input").forEach(function(i){i.value=cur[i.dataset.k]||"";});
+ document.getElementById("fTitle").value=cur.title;
+ document.getElementById("fNote").value=cur.note;
+ drawAllChips();drawSponsors();
  var pb=document.getElementById("btnPub");
  pb.disabled=false;pb.classList.remove("done");
  pb.textContent=curSrc?"재발행":"발행";
- drawStyles();drawPv();
+ drawStyles();drawBgs();drawPv();
  showView("vEdit");
  if(!src)document.getElementById("fTitle").focus();
 }
-function drawPv(){
- renderPoster(document.getElementById("pv"),cur,curVar,true);
-}
+function drawPv(){renderPoster(document.getElementById("pv"),Object.assign({},cur),curVar,true);}
 function drawStyles(){
  var r=document.getElementById("styleRow");r.innerHTML="";
  VAR.forEach(function(v){
@@ -447,23 +616,57 @@ function drawStyles(){
   var po=document.createElement("div");
   renderPoster(po,cur,v.id,false);
   b.appendChild(po);
-  b.innerHTML+='<span class="snm">'+v.nm+'</span>';
+  var s=document.createElement("span");s.className="snm";s.textContent=v.nm;
+  b.appendChild(s);
   b.addEventListener("click",function(){curVar=v.id;drawStyles();drawPv();});
   r.appendChild(b);
  });
 }
-document.querySelectorAll(".fld input").forEach(function(i){
- i.addEventListener("input",function(){
-  cur[i.dataset.k]=i.value;
-  drawPv();
-  var s=document.querySelector('#pv [data-fld="'+i.dataset.k+'"]');
-  if(s)s.classList.add("bump");
+function drawBgs(){
+ var r=document.getElementById("bgRow");r.innerHTML="";
+ var p=PAL[kit.pal];
+ BGKEYS.forEach(function(k){
+  var b=document.createElement("button");
+  b.className="bgth";b.setAttribute("aria-pressed",cur.bg===k?"true":"false");
+  b.style.background=BG[k].css(p);
+  var s=document.createElement("span");s.className="bnm";s.textContent=BG[k].nm;
+  b.appendChild(s);
+  b.addEventListener("click",function(){cur.bg=k;drawBgs();drawStyles();drawPv();});
+  r.appendChild(b);
  });
-});
+}
+document.getElementById("fTitle").addEventListener("input",function(){cur.title=this.value;drawPv();});
+document.getElementById("fNote").addEventListener("input",function(){cur.note=this.value;drawPv();});
+
+/* sponsors */
+function drawSponsors(){
+ var box=document.getElementById("spTags");box.innerHTML="";
+ cur.sponsors.forEach(function(s,i){
+  var t=document.createElement("span");t.className="sptag";
+  t.innerHTML=esc(s);
+  var x=document.createElement("button");x.textContent="×";x.setAttribute("aria-label",s+" 제거");
+  x.addEventListener("click",function(){cur.sponsors.splice(i,1);drawSponsors();drawPv();});
+  t.appendChild(x);
+  box.appendChild(t);
+ });
+}
+function addSponsor(){
+ var inp=document.getElementById("spName");
+ var v=inp.value.trim();
+ if(!v)return;
+ if(cur.sponsors.length>=4){toast("후원 레일은 최대 4개 — 슬롯 규격");return;}
+ cur.sponsors.push(v);inp.value="";
+ drawSponsors();drawPv();inp.focus();
+}
+document.getElementById("spAdd").addEventListener("click",addSponsor);
+document.getElementById("spName").addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();addSponsor();}});
 
 /* ── publish ── */
 document.getElementById("btnPub").addEventListener("click",function(){
  var pb=this;
+ /* 비운 필드는 기본값으로 — 막힘 없이 */
+ if(!cur.date)cur.date=fmtDate(upcoming(6));
+ if(!cur.time)cur.time="19:00";
  pb.disabled=true;pb.textContent="규격 검수 중";
  var qs=document.getElementById("qcs");
  qs.classList.add("on");
@@ -472,7 +675,7 @@ document.getElementById("btnPub").addEventListener("click",function(){
  setTimeout(function(){
   qs.classList.remove("on");
   pb.classList.add("done");pb.textContent="발행 완료";
-  var d={id:curSrc||nextId++,title:cur.title||"제목 없음",date:cur.date,time:cur.time,gtd:cur.gtd,buyin:cur.buyin,note:cur.note,v:curVar,pub:"방금 발행"};
+  var d={id:curSrc||nextId++,title:cur.title||"제목 없음",date:cur.date,time:cur.time,gtd:cur.gtd||"—",buyin:cur.buyin||"—",note:cur.note,v:curVar,bg:cur.bg,sponsors:cur.sponsors.slice(),pub:"방금 발행"};
   if(curSrc){posters=posters.map(function(p){return p.id===curSrc?d:p;});}
   else{posters.unshift(d);}
   toast("검수 통과 — <b>발행됨</b> · 인스타·카카오톡 이미지 생성");
@@ -516,7 +719,7 @@ function drawBrand(){
 }
 function refreshAll(){
  drawHome();
- if(document.getElementById("vEdit").classList.contains("on")){drawStyles();drawPv();}
+ if(document.getElementById("vEdit").classList.contains("on")){drawStyles();drawBgs();drawPv();}
 }
 document.getElementById("btnBrand").addEventListener("click",function(){
  drawBrand();document.getElementById("scrim").classList.add("on");
