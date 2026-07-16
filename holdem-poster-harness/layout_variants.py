@@ -12,7 +12,7 @@ import math, os, sys
 from PIL import Image, ImageDraw
 from render_poster import (noto, measure, fit_font, fit_common, draw_ls, lsw,
                            text_img, theight, theme_palette, ASSET)
-from render_editorial import bebas, oswald, grade, frost, vtext, rect_blend, metalize
+from render_editorial import bebas, oswald, grade, frost, vtext, rect_blend, metalize, disp_mixed, fit_disp
 
 W, H = 1080, 1900
 ML, MR, SAFE_B = 80, W - 72, H - 60
@@ -98,15 +98,16 @@ def buyin_row(img, d, y, data, acc, hi, center=False):
     ccy = y + bh / 2
     chip_f = oswald(12, 700)
     chw = int(lsw("BUY-IN", chip_f, 3)) + 32
-    bvf, _ = fit_font(data["buyin"], lambda s: noto(s, 800), MR - ML - chw - 100, 27, 21)
+    from render_editorial import disp_w
+    bsz = fit_disp(data["buyin"], MR - ML - chw - 100, 34, 24)
     if center:
-        tot = chw + 24 + measure(data["buyin"], bvf)[0]
+        tot = chw + 24 + disp_w(data["buyin"], bsz)
         x0 = CX - tot / 2
     else:
         x0 = ML + 16
     rect_blend(img, [x0, ccy - 14, x0 + chw, ccy + 14], (acc[0], acc[1], acc[2], 235), radius=14)
     draw_ls(d, (x0 + chw / 2, ccy), "BUY-IN", chip_f, (18, 12, 32), ls=3, anchor="mm")
-    d.text((x0 + chw + 24, ccy), data["buyin"], font=bvf, fill=hi, anchor="lm")
+    disp_mixed(d, (x0 + chw + 24, ccy), data["buyin"], bsz, hi, anchor="lm")
     return y + bh
 
 def stats_strip(img, d, y, data, acc, soft, hi, x0=None, x1=None):
@@ -115,12 +116,12 @@ def stats_strip(img, d, y, data, acc, soft, hi, x0=None, x1=None):
     frost(img, (x0, y, x1, y + sh), 14, acc, tab=False)
     st = data["stats"]; n = len(st); cw = (x1 - x0) / n
     lab_f, _ = fit_common([(lab, cw - 20) for lab, _ in st], lambda s: oswald(s, 600), 15, 9)
-    val_f, _ = fit_common([(val, cw - 20) for _, val in st], lambda s: noto(s, 800), 30, 14)
+    vsz = min(fit_disp(val, cw - 20, 38, 18) for _, val in st)   # 공통 크기(열별 축소 금지)
     for i, (lab, val) in enumerate(st):
         sx = x0 + cw * (i + 0.5)
         if i: d.line([(x0 + cw * i, y + 18), (x0 + cw * i, y + sh - 18)], fill=(255, 255, 255, 30), width=1)
         draw_ls(d, (sx, y + 20), lab, lab_f, soft, ls=1, anchor="ma")
-        d.text((sx, y + 48), val, font=val_f, fill=hi, anchor="ma")
+        disp_mixed(d, (sx, y + 46), val, vsz, hi, anchor="ma")
     return y + sh
 
 def blind_cf(lv, gw, extra=None):

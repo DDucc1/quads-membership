@@ -70,6 +70,40 @@ def grade(bg, acc, leak_xy=(0.82, 0.12)):
     img.alpha_composite(Image.merge("RGBA", (grain, grain, grain, Image.new("L", (Wd, Hd), 10))))
     return img
 
+import re
+_scd = ImageDraw.Draw(Image.new("RGB", (4, 4)))
+def _disp_runs(text):
+    return re.findall(r"[\x00-\x7F]+|[^\x00-\x7F]+", text)
+def disp_w(text, size, kw_ratio=0.80):
+    """disp_mixed로 그릴 때의 총 폭."""
+    bf = bebas(size); kf = noto(max(10, int(size * kw_ratio)), 700)
+    return sum(_scd.textlength(r, font=(bf if r.isascii() else kf)) for r in _disp_runs(text))
+def fit_disp(text, maxw, start, mn):
+    s = start
+    while s > mn and disp_w(text, s) > maxw:
+        s -= 1
+    return s
+def disp_mixed(d, xy, text, size, fill, anchor="la", kw_ratio=0.80):
+    """스탯/바이인 값용 디스플레이 조판 — 영문·숫자=Bebas, 한글=Noto(베이스라인 정렬).
+    Bebas에 한글 글리프가 없어 혼합 스크립트는 반드시 이걸로 그린다."""
+    runs = _disp_runs(text)
+    bf = bebas(size); kf = noto(max(10, int(size * kw_ratio)), 700)
+    asc_b = bf.getmetrics()[0]; asc_k = kf.getmetrics()[0]
+    asc = asc_b if any(r.isascii() for r in runs) else asc_k
+    widths = [_scd.textlength(r, font=(bf if r.isascii() else kf)) for r in runs]
+    total = sum(widths)
+    x, y = xy
+    ha = anchor[0]; va = anchor[1] if len(anchor) > 1 else "a"
+    if ha == "m": x -= total / 2
+    elif ha == "r": x -= total
+    if va == "a": base = y + asc
+    elif va == "m": base = y + asc * 0.52
+    else: base = y
+    for r, w in zip(runs, widths):
+        d.text((x, base), r, font=(bf if r.isascii() else kf), fill=fill, anchor="ls")
+        x += w
+    return total
+
 def metalize(src, tone=(246, 208, 118)):
     """머니/총보증 타이포 메탈릭 마감 — 다단 그라데이션 + 베벨(상단 하이라이트/하단 셰이드).
     text_img 산출물을 후처리한다(크기·qc 마킹 보존 → QC 박스 불변)."""

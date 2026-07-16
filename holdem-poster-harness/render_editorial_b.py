@@ -4,7 +4,7 @@
 import os, sys
 from PIL import Image, ImageDraw
 from render_poster import noto, measure, fit_font, fit_common, draw_ls, lsw, text_img, theight, theme_palette, ASSET
-from render_editorial import bebas, oswald, grade, frost, vtext, spade, rect_blend
+from render_editorial import bebas, oswald, grade, frost, vtext, spade, rect_blend, disp_mixed, fit_disp, disp_w
 import render_poster_b as B
 
 W, H = 1080, 1900
@@ -66,20 +66,20 @@ def render(data, lv, out="demo_EB.png"):
     chw = int(lsw("BUY-IN", chip_f, 3)) + 32
     rect_blend(img, [ML + 16, ccy - 14, ML + 16 + chw, ccy + 14], (acc[0], acc[1], acc[2], 235), radius=14)
     draw_ls(d, (ML + 16 + chw / 2, ccy), "BUY-IN", chip_f, (18, 12, 32), ls=3, anchor="mm")
-    bvf, _ = fit_font(data["buyin"], lambda s: noto(s, 800), MR - ML - chw - 100, 27, 21)
-    d.text((ML + 16 + chw + 24, ccy), data["buyin"], font=bvf, fill=hi, anchor="lm")
+    bsz = fit_disp(data["buyin"], MR - ML - chw - 100, 34, 24)
+    disp_mixed(d, (ML + 16 + chw + 24, ccy), data["buyin"], bsz, hi, anchor="lm")
 
     # 스탯 4열 (프로스티드 스트립) — 라벨/값 공통 크기(열별 제각각 축소 금지) + 수직 중앙
     sy0 = bi_y + bi_h + 14; sy1 = sy0 + 96
     frost(img, (ML, sy0, MR, sy1), 14, acc, tab=False)
     st = data["stats"]; n = len(st); cw = (MR - ML) / n
     lab_f, _ = fit_common([(lab, cw - 20) for lab, _ in st], lambda s: oswald(s, 600), 15, 9)
-    val_f, _ = fit_common([(val, cw - 20) for _, val in st], lambda s: noto(s, 800), 30, 14)
+    vsz = min(fit_disp(val, cw - 20, 38, 18) for _, val in st)   # 공통 크기(열별 축소 금지)
     for i, (lab, val) in enumerate(st):
         sx = ML + cw * (i + 0.5)
         if i: d.line([(ML + cw * i, sy0 + 18), (ML + cw * i, sy1 - 18)], fill=(255, 255, 255, 30), width=1)
         draw_ls(d, (sx, sy0 + 20), lab, lab_f, soft, ls=1, anchor="ma")
-        d.text((sx, sy0 + 48), val, font=val_f, fill=hi, anchor="ma")
+        disp_mixed(d, (sx, sy0 + 46), val, vsz, hi, anchor="ma")
 
     # BODY: 좌 프라이즈 / 우 블라인드 (프로스티드 패널)
     by0 = sy1 + 24; by1 = 1608   # Notice 4행 + 푸터가 세이프존 안에 들어오는 상한
