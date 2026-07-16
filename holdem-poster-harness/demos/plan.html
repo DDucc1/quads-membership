@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="포스터 스튜디오 서비스 설계서 — 입력 체계, 슬롯 옵션, 하네스 경계(규율 18) 와 다양성 3축">
+<title>포스터 스튜디오 — 서비스 설계서</title>
+<style>
+:root{
+ --bg:#131211;--panel:#1B1917;--panel2:#22201C;--border:#2E2B26;--border2:#3A362F;
+ --ink:#EFEAE1;--muted:#A39C91;--faint:#6E6960;
+ --gold:#D9A94C;--gold2:#F0C878;--good:#5FBE8B;--lock:#C9856B;
+ --ease:cubic-bezier(.22,.61,.36,1)
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.72;
+ font-family:system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+ -webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px 110px}
+
+/* cover */
+.cover{padding:64px 0 44px;border-bottom:1px solid var(--border)}
+.cover .eyebrow{display:flex;align-items:center;gap:10px;font-size:.74rem;font-weight:700;
+ letter-spacing:.22em;color:var(--gold);text-transform:uppercase}
+.cover .eyebrow svg{width:17px;height:17px}
+.cover h1{font-size:clamp(1.7rem,4.6vw,2.5rem);margin:16px 0 10px;letter-spacing:-.02em;line-height:1.2;text-wrap:balance}
+.cover p{color:var(--muted);max-width:56ch;margin:0;font-size:.98rem}
+.cover .meta{display:flex;gap:18px;margin-top:22px;font-size:.76rem;color:var(--faint)}
+.cover .meta b{color:var(--muted);font-weight:600}
+
+/* toc */
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:30px 0 0}
+.toc a{display:block;padding:12px 16px;border:1px solid var(--border);border-radius:10px;
+ color:var(--muted);text-decoration:none;font-size:.85rem;transition:border-color .15s,color .15s}
+.toc a:hover{border-color:var(--gold);color:var(--ink)}
+.toc a b{display:block;color:var(--gold);font-size:.7rem;letter-spacing:.14em;font-weight:700}
+
+section{margin-top:64px}
+.snum{font-size:.72rem;font-weight:700;letter-spacing:.2em;color:var(--gold);text-transform:uppercase}
+h2{font-size:1.4rem;margin:8px 0 14px;letter-spacing:-.01em;text-wrap:balance}
+p.lead{color:var(--muted);max-width:62ch;margin:0 0 22px}
+p.lead b{color:var(--ink);font-weight:700}
+
+/* tables */
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th{text-align:left;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+ padding:9px 12px;border-bottom:1px solid var(--border2);font-weight:700}
+td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--muted)}
+td:first-child{color:var(--ink);font-weight:600;white-space:nowrap}
+.tscroll{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--panel)}
+.tscroll table{min-width:560px}
+.tag{display:inline-block;font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:12px;margin-right:4px}
+.tag.must{background:color-mix(in srgb,var(--gold) 16%,transparent);color:var(--gold2)}
+.tag.auto{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good)}
+.tag.once{background:var(--panel2);color:var(--muted);border:1px solid var(--border2)}
+
+/* flow sim */
+.simgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:8px}
+.sim{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px 17px}
+.sim .freq{font-size:.68rem;font-weight:700;letter-spacing:.12em;color:var(--gold);text-transform:uppercase}
+.sim h3{margin:5px 0 7px;font-size:.98rem}
+.sim p{margin:0;font-size:.82rem;color:var(--muted)}
+.sim .kpi{margin-top:11px;font-size:.8rem;font-weight:700;color:var(--good);font-variant-numeric:tabular-nums}
+.flow{display:flex;align-items:stretch;gap:0;margin-top:20px;overflow-x:auto;padding-bottom:6px}
+.fstep{flex:1;min-width:118px;background:var(--panel);border:1px solid var(--border);border-radius:10px;
+ padding:12px 13px;position:relative}
+.fstep+.fstep{margin-left:26px}
+.fstep+.fstep::before{content:"";position:absolute;left:-19px;top:50%;width:12px;height:2px;background:var(--border2)}
+.fstep b{display:block;font-size:.82rem;margin-bottom:3px}
+.fstep span{font-size:.72rem;color:var(--faint);display:block;line-height:1.5}
+.fstep.hot{border-color:var(--gold)}
+.fstep.hot b{color:var(--gold2)}
+
+/* boundary */
+.boundary{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+@media(max-width:680px){.boundary{grid-template-columns:1fr}}
+.bcol{border-radius:14px;padding:20px 21px;border:1px solid var(--border)}
+.bcol.lockside{background:linear-gradient(180deg,color-mix(in srgb,var(--lock) 7%,var(--panel)),var(--panel))}
+.bcol.freeside{background:linear-gradient(180deg,color-mix(in srgb,var(--good) 6%,var(--panel)),var(--panel))}
+.bcol .bh{display:flex;align-items:baseline;gap:9px;margin-bottom:4px}
+.bcol .bh h3{margin:0;font-size:1.02rem}
+.bcol.lockside .bh h3{color:var(--lock)}
+.bcol.freeside .bh h3{color:var(--good)}
+.bcol .bh span{font-size:.72rem;color:var(--faint)}
+.bcol>p{font-size:.83rem;color:var(--muted);margin:0 0 14px}
+.rlist{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.rlist li{display:flex;gap:10px;font-size:.83rem;color:var(--muted);padding:7px 10px;
+ background:rgba(0,0,0,.18);border-radius:8px}
+.rlist li b{color:var(--ink);font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.rlist li.grp{background:none;padding:8px 0 0;font-size:.7rem;font-weight:700;letter-spacing:.12em;
+ text-transform:uppercase}
+.lockside .rlist li.grp{color:var(--lock)}
+.freeside .rlist li.grp{color:var(--good)}
+.keyline{margin-top:20px;padding:16px 20px;border-left:3px solid var(--gold);background:var(--panel);
+ border-radius:0 10px 10px 0;font-size:.9rem;color:var(--muted)}
+.keyline b{color:var(--gold2)}
+
+/* axes */
+.axes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:8px}
+.axis{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:17px 18px}
+.axis .an{font-size:.68rem;font-weight:700;letter-spacing:.14em;color:var(--gold);text-transform:uppercase}
+.axis h3{margin:5px 0 6px;font-size:.96rem}
+.axis p{margin:0;font-size:.81rem;color:var(--muted)}
+.axis .scope{margin-top:10px;font-size:.72rem;color:var(--faint)}
+.axis .scope b{color:var(--muted);font-weight:600}
+
+/* roadmap */
+.road{display:grid;gap:8px;margin-top:8px}
+.ritem{display:flex;gap:14px;align-items:baseline;padding:13px 16px;background:var(--panel);
+ border:1px solid var(--border);border-radius:10px;font-size:.88rem}
+.ritem .st{flex:none;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+ padding:3px 10px;border-radius:12px}
+.ritem .st.done{background:color-mix(in srgb,var(--good) 15%,transparent);color:var(--good)}
+.ritem .st.next{background:color-mix(in srgb,var(--gold) 15%,transparent);color:var(--gold2)}
+.ritem .st.wait{background:var(--panel2);color:var(--faint);border:1px solid var(--border2)}
+.ritem span{color:var(--muted)}
+.ritem b{color:var(--ink);font-weight:700}
+
+footer{margin-top:70px;padding-top:22px;border-top:1px solid var(--border);
+ font-size:.76rem;color:var(--faint);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+a{color:var(--gold)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="cover">
+  <div class="eyebrow">
+    <svg viewBox="0 0 38 38" aria-hidden="true"><path d="M19 4C13 12 7 15 7 21c0 4 3 7 7 7 1.6 0 3.1-.5 4-1.4V30c0 2-1 3.4-3 4h8c-2-.6-3-2-3-4v-3.4c.9.9 2.4 1.4 4 1.4 4 0 7-3 7-7 0-6-6-9-12-17z" fill="#D9A94C"/></svg>
+    Poster Studio — Service Design
+  </div>
+  <h1>구조는 강한 규율로, 배경은 무제한으로.<br>입력은 네 개면 끝나는 포스터 서비스</h1>
+  <p>홀덤펍 사장이 정보만 고르면, 규격 검수를 통과한 매장 고유 스타일의 포스터가 자동 발행된다. 압도적 편의와 결과물 품질이 동시에 성립해야 유료 서비스로 균형이 잡힌다 — 모든 설계 판단의 기준.</p>
+  <div class="meta"><span>기준일 <b>2026-07-16</b></span><span>브랜치 <b>claude/holdem-poster-harness-I58wz</b></span><span>상태 <b>프로토타입 v2 반영됨</b></span></div>
+  <nav class="toc">
+    <a href="#s1"><b>01</b>정보 계층 — 무엇을 입력받나</a>
+    <a href="#s2"><b>02</b>입력 플로우 — 어떻게 흐르나</a>
+    <a href="#s3"><b>03</b>추가 옵션 — 슬롯 체계</a>
+    <a href="#s4"><b>04</b>하네스 경계 — 규율 18</a>
+    <a href="#s5"><b>05</b>다양성 3축</a>
+    <a href="#s6"><b>06</b>로드맵 · 검증</a>
+  </nav>
+</div>
+
+<section id="s1">
+  <div class="snum">01 — 정보 계층</div>
+  <h2>사장이 매번 새로 아는 정보는 4개뿐이다</h2>
+  <p class="lead">포스터에 들어가는 정보는 15개가 넘지만, 그걸 다 입력받는 순간 서비스가 귀찮아진다. 기준은 우선순위가 아니라 <b>정보의 출처</b> — 사장 머릿속에만 있는 것만 묻고, 나머지는 시스템이 이미 안다.</p>
+  <div class="tscroll"><table>
+    <tr><th>계층</th><th>요소</th><th>출처 · 처리</th></tr>
+    <tr><td><span class="tag must">매번 입력</span></td><td>① 대회명 &nbsp;② 일시 &nbsp;③ 바이인 &nbsp;④ 개런티 (+선택: 한 줄 훅)</td><td>사장 머릿속 — 유일하게 매번 묻는 것. 칩 선택으로 타이핑 최소화</td></tr>
+    <tr><td><span class="tag auto">프리셋 승계</span></td><td>블라인드 구조, 스타팅 스택, 레벨 시간, 리엔트리·레이트 등록 규정</td><td>온보딩 때 등록한 "정규 구조" 자동 적용, 접힌 패널에서 수정 가능</td></tr>
+    <tr><td><span class="tag auto">자동 산출</span></td><td>상금 분배(1~N위), 채널별 사이즈, 레이아웃·서체·규격</td><td>개런티와 하우스 스타일에서 시스템이 계산</td></tr>
+    <tr><td><span class="tag once">매장 자산</span></td><td>매장명, 문장(엠블럼), 컬러, 서체 무드, SNS, 주소</td><td>온보딩 1회 등록 — 이후 전 포스터에 자동 주입</td></tr>
+  </table></div>
+  <div class="keyline">포스터에서 손님을 움직이는 위계는 <b>개런티 &gt; 일시 &gt; 바이인 &gt; 대회명</b> 순. 이 순서는 렌더 위계(규율 R5)로 고정되고, 입력 순서는 사장의 말 순서를 따른다 — <em>"토요일에 위클리 하는데, 바이인 5만에 300 걸었어."</em></div>
+</section>
+
+<section id="s2">
+  <div class="snum">02 — 입력 플로우</div>
+  <h2>사용 상황 4가지를 시뮬레이션하면 흐름이 정해진다</h2>
+  <div class="simgrid">
+    <div class="sim"><div class="freq">주 3–5회 · 사용량 80%</div><h3>반복 대회</h3><p>홈에서 "이어받기" → 날짜 자동 +7일 → 확인 → 발행.</p><div class="kpi">입력 0–2개 · 30초</div></div>
+    <div class="sim"><div class="freq">월 1–2회</div><h3>새 이벤트</h3><p>필수 4 칩 선택 + 훅 1 입력. 구조는 자동 구성.</p><div class="kpi">입력 5개 · 2분</div></div>
+    <div class="sim"><div class="freq">수시</div><h3>발행 후 수정</h3><p>포스터에서 해당 글자 클릭 → 고침 → 재발행(게시물 교체).</p><div class="kpi">입력 1개 · 15초</div></div>
+    <div class="sim"><div class="freq">최초 1회</div><h3>온보딩</h3><p>매장 자산 + 정규 블라인드 구조 등록. 여기만 무겁고 이후 평생 가벼움.</p><div class="kpi">5분 · 1회</div></div>
+  </div>
+  <div class="flow">
+    <div class="fstep"><b>홈</b><span>내 포스터 그리드, 이번 주 빠진 대회 넛지</span></div>
+    <div class="fstep hot"><b>이어받기 / 새로</b><span>2클릭 이내 진입</span></div>
+    <div class="fstep hot"><b>단일 화면 에디터</b><span>칩 선택 → 즉시 미리보기. 스텝 없음. 모르는 값 건너뛰기 허용</span></div>
+    <div class="fstep"><b>검수 · 발행</b><span>빈 값 기본 채움 → 규격 검수 → 채널별 이미지</span></div>
+  </div>
+  <p class="lead" style="margin-top:18px">막힘 제거 원칙: 날짜·시간·금액은 <b>타이핑이 아니라 칩 선택</b>(다가오는 토/일 자동 제안, 금액 프리셋), 대회명은 자동완성, 구조·분배는 "자동 구성됨" 한 줄로 접힘. <b>어떤 값도 진행을 막지 않는다.</b></p>
+</section>
+
+<section id="s3">
+  <div class="snum">03 — 추가 옵션</div>
+  <h2>옵션은 스티커가 아니라 슬롯이다</h2>
+  <p class="lead">특수 목적 요소는 필수 플로우에 절대 노출하지 않고 "+ 추가 요소" 한 곳에만 둔다. 각 옵션은 레이아웃에 <b>미리 설계된 자리(슬롯)</b>에만 들어가며, 슬롯이 채워지면 검수가 그 슬롯을 포함해 다시 돈다 — 그래서 옵션을 더할수록 완성도가 올라간다.</p>
+  <div class="tscroll"><table>
+    <tr><th>옵션</th><th>슬롯 위치</th><th>완성도 장치</th><th>상태</th></tr>
+    <tr><td>후원사 로고</td><td>하단 로고 레일</td><td>최대 4개, 단색 워드마크 통일, 자동 정렬 — 덕지덕지 방지</td><td>구현됨 (v2)</td></tr>
+    <tr><td>초대 이벤트 (게스트·인플루언서)</td><td>사진형 히어로</td><td>얼굴 세이프존 검수, 적응형 스크림 (렌더 경로 기구현)</td><td>다음 단계</td></tr>
+    <tr><td>예약 QR</td><td>하단 코너</td><td>최소 크기·대비 검수</td><td>다음 단계</td></tr>
+    <tr><td>시리즈·서킷 뱃지</td><td>상단 뱃지</td><td>시리즈 공통 아이덴티티 승계 (Day1/포인트)</td><td>설계</td></tr>
+    <tr><td>프로모션 (바운티·위성전)</td><td>강조 밴드</td><td>개런티 밴드와 위계 충돌 자동 조정</td><td>설계</td></tr>
+  </table></div>
+</section>
+
+<section id="s4">
+  <div class="snum">04 — 하네스 경계</div>
+  <h2>구조·텍스트는 규율 18, 배경은 무제한</h2>
+  <p class="lead">품질 하한을 지키려면 하네스가 강해야 하지만, 강할수록 결과물이 비슷해진다는 딜레마 — 해법은 하네스를 약하게 하는 게 아니라 <b>검사 대상을 나누는 것</b>. 규칙은 관계·비율·순서만 검사하고, 절대값(어떤 색·어떤 그림·어떤 무드)은 검사하지 않는다.</p>
+  <div class="boundary">
+    <div class="bcol lockside">
+      <div class="bh"><h3>강한 규율 — 구조·텍스트 표기</h3><span>18개 · 전부 자동 검증 가능</span></div>
+      <p>이 안에서는 타협 없음. 위반 시 출고 금지.</p>
+      <ul class="rlist">
+        <li class="grp">렌더 검증 — 기구현 (qc.py)</li>
+        <li><b>R1</b>캔버스 이탈 금지</li>
+        <li><b>R2</b>세이프존 침범 금지 (좌우 6% · 상하 3%)</li>
+        <li><b>R3</b>텍스트 상호 겹침 금지 (양축 3px 초과)</li>
+        <li><b>R4</b>동일 역할 요소 크기 통일 (fit_common)</li>
+        <li class="grp">위계</li>
+        <li><b>R5</b>정보 위계 순서 고정 — 개런티 ≥ 대회명 &gt; 일시 &gt; 바이인 &gt; 구조표 &gt; 부가</li>
+        <li><b>R6</b>최상위 강조 요소는 포스터당 1개</li>
+        <li class="grp">가독성</li>
+        <li><b>R7</b>최소 폰트 크기 하한 (표·푸터 포함)</li>
+        <li><b>R8</b>배경–텍스트 대비 하한 (픽셀 샘플링, R5 CONTRAST 백로그)</li>
+        <li><b>R9</b>배경 복잡도 초과 영역엔 스크림 자동 삽입</li>
+        <li class="grp">타이포</li>
+        <li><b>R10</b>서체는 하우스 킷 2종만 (디스플레이 + 본문)</li>
+        <li><b>R11</b>자간·행간 규격 (디스플레이 타이트, 라벨 레터스페이싱)</li>
+        <li><b>R12</b>숫자는 tabular 정렬 (금액·블라인드·시간)</li>
+        <li class="grp">정렬 · 여백</li>
+        <li><b>R13</b>모든 요소 정렬 그리드 스냅</li>
+        <li><b>R14</b>여백 리듬 — 섹션 간격 등비 유지</li>
+        <li><b>R15</b>상·하단 시각 무게 균형</li>
+        <li class="grp">표기 · 브랜드</li>
+        <li><b>R16</b>금액·시간 표기 규격 통일 (만 단위 · 24시)</li>
+        <li><b>R17</b>블라인드 표 형식 고정 (LV / SB·BB)</li>
+        <li><b>R18</b>브랜드 요소 위치·크기 규격 (상단 마크 · 푸터 · 슬롯)</li>
+      </ul>
+    </div>
+    <div class="bcol freeside">
+      <div class="bh"><h3>무제한 자유 — 배경·특수 디자인</h3><span>규율 밖 영역 · 계속 확장</span></div>
+      <p>어떤 컨셉이든 등록될 수 있다. 하네스는 이 영역을 건드리지 않는다.</p>
+      <ul class="rlist">
+        <li class="grp">배경 아트</li>
+        <li><b>생성</b>파라메트릭 배경 — 그라디언트·레이·보케·하프톤·기하·네온·그레인… 시드로 무한 변형</li>
+        <li><b>사진</b>고해상 무료 이미지 소스 활용 (매장 사진, 스톡) — 스크림·대비만 R8·R9가 보정</li>
+        <li><b>일러스트</b>동물 문장, 커스텀 아트, 시즌 컨셉 — 직접 제작 등록</li>
+        <li class="grp">특수 디자인</li>
+        <li><b>모티프</b>그래픽 모티프·질감·조명 연출 자유</li>
+        <li><b>무드</b>미니멀부터 맥시멀까지 — 취향 축이 결정</li>
+        <li class="grp">유일한 접점</li>
+        <li><b>검수</b>배경 위에 얹힌 <em>글자</em>가 R7–R9를 통과하는지만 본다. 배경 자체는 심사하지 않는다</li>
+      </ul>
+    </div>
+  </div>
+  <div class="keyline"><b>"다 비슷해 보인다"의 실체는 색이 아니라 실루엣(구도)이다.</b> 사람 눈은 구도를 먼저 인지한다. 따라서 다양성 투자 순서는 ① 레이아웃 계열 확장 ② 배경 모티프 계열 다변화 ③ 컬러 — 레이아웃 확장은 퀄리티 트랙이 담당한다.</div>
+</section>
+
+<section id="s5">
+  <div class="snum">05 — 다양성 3축</div>
+  <h2>같은 펍은 일관되게, 다른 펍은 다르게, 매번 조금씩 새롭게</h2>
+  <div class="axes">
+    <div class="axis"><div class="an">축 1 · 펍 단위 고정</div><h3>아이덴티티</h3><p>브랜드 킷 — 문장·컬러·서체 무드. 온보딩에서 확정되어 전 포스터에 주입.</p><div class="scope"><b>효과</b> 같은 펍은 일관, 다른 펍은 상이</div></div>
+    <div class="axis"><div class="an">축 2 · 포스터 단위 변동</div><h3>표현</h3><p>배경 컨셉·시드, 레이아웃 변형, 그래픽 모티프 — 무제한 자유 영역.</p><div class="scope"><b>효과</b> 같은 펍 안에서도 매번 조금 다름</div></div>
+    <div class="axis"><div class="an">축 3 · 사장 단위</div><h3>취향</h3><p>밀도·장식성·구도 성향 — 온보딩 캘리브레이션으로 기본값 개인화.</p><div class="scope"><b>효과</b> 취향이 없는 펍도 자기 결이 생김</div></div>
+  </div>
+  <p class="lead" style="margin-top:18px">세 축의 조합 공간(컬러 계열 × 문장 × 서체 × 레이아웃 × 배경 컨셉 × 시드)에서 두 펍이 같은 결과를 받을 확률은 구조적으로 0에 수렴한다. 같은 상권 중복은 <b>상권 배타 배정</b>(운영 정책)으로 마감 — 스케일 단계 과제.</p>
+</section>
+
+<section id="s6">
+  <div class="snum">06 — 로드맵 · 검증</div>
+  <h2>실행 순서와 유료 서비스 성립 검증</h2>
+  <div class="road">
+    <div class="ritem"><span class="st done">완료</span><span><b>① 칩 중심 에디터</b> — 날짜·시간·금액 칩, 자동완성, 자동 구성 패널, 빈 값 기본 채움 (프로토타입 v2)</span></div>
+    <div class="ritem"><span class="st done">완료</span><span><b>② 슬롯 1호 후원 로고 레일</b> — 최대 4개, 단색 정렬, 전용 슬롯 (프로토타입 v2)</span></div>
+    <div class="ritem"><span class="st done">분담</span><span><b>③ 레이아웃 계열 확장</b> — 퀄리티 트랙 담당 (메탈릭 타이포·보케 레이어 진행 중)</span></div>
+    <div class="ritem"><span class="st next">다음</span><span><b>게스트 히어로 슬롯</b> — 사진 업로드 + 얼굴 세이프존, 초대 이벤트 대응</span></div>
+    <div class="ritem"><span class="st next">다음</span><span><b>규율 18 명문화</b> — qc.py R룰 확장 (R5–R18 자동 검증화)</span></div>
+    <div class="ritem"><span class="st wait">대기</span><span><b>실렌더 연동</b> — 프로토타입 입력 → 파이썬 렌더 PNG · <b>온보딩 통합</b> · <b>인쇄급 고해상</b></span></div>
+  </div>
+  <div class="tscroll" style="margin-top:22px"><table>
+    <tr><th>기준</th><th>이 설계</th><th>대안 (캔바 셀프 / 외주)</th></tr>
+    <tr><td>편의</td><td>반복 대회 30초 · 입력 0–2개</td><td>30분+ 셀프 / 왕복 1–2일</td></tr>
+    <tr><td>품질</td><td>하한 보장(규율 18 게이트) + 상한 상승(크래프트 레이어)</td><td>하한 없음 / 디자이너 편차</td></tr>
+    <tr><td>고유성</td><td>3축 조합 — 겹침 확률 0 수렴</td><td>템플릿 전부 겹침 / 브랜드 비일관</td></tr>
+  </table></div>
+</section>
+
+<footer>
+  <span>Poster Studio — Service Design · 2026-07-16</span>
+  <span>현황판: holdem-poster-harness/HANDOFF.md</span>
+</footer>
+
+</div>
+</body>
+</html>
