@@ -8,14 +8,23 @@ Codex QC 레이어 — 까다로운 규격 검증 리뷰어.
   R1 CANVAS  : 캔버스 이탈
   R2 SAFE    : 세이프존(좌우 6% / 상하 3%) 침범
   R3 OVERLAP : 텍스트 상호 겹침 (양축 3px 초과 침투)
+  R4 SIZE    : 같은 행 인접 텍스트의 어중간한 크기 차 (1.04~1.75x)
+
+규율 v2 (demos/plan.html §04) 콘텐츠 정합 — run()에 spec을 넘기면 함께 검사:
+  R5 EXIST   : 필수 값(title/date/buyin/gtd) 실재 · placeholder 금지 · 렌더 출현
+  R6 MATH    : 상금 분배 합 ≥ 개런티(보장 미달 금지), 블라인드 단조 증가
+  R7 DATE    : 표기 요일과 실제 달력 일치
 
 위반이 하나라도 있으면 FAIL — 해당 산출물은 출고 금지.
+role() 컨텍스트로 요소 역할 태깅 가능(위계 검사 R8+의 선행 인프라).
 
 사용:
     import qc
     rp, EA, EB, EC = qc.load()          # 계측 패치 후 렌더러 로드 (이 순서 필수)
     qc.run("이름", W, H, lambda: EA.render(...))
 """
+import re
+from contextlib import contextmanager
 from PIL import Image, ImageDraw
 
 BOXES = []
@@ -23,6 +32,17 @@ PANELS = []        # frost 패널 경계 — 서로 다른 패널의 텍스트�
 ENABLED = True
 CANVAS = None      # run()이 지정한 메인 캔버스 크기 — 이 크기의 이미지에 그린 것만 기록
                    # (text_img/vtext의 내부 스크래치 캔버스 드로잉을 제외하기 위함)
+_ROLE = []         # role() 컨텍스트 스택 — 규율 v2 위계 검사(R8+)용 역할 태깅
+
+@contextmanager
+def role(name):
+    """렌더러가 요소의 의미 역할(gtd/title/date/buyin/...)을 선언하는 컨텍스트.
+    with qc.role("gtd"): draw.text(...) — 블록 안에서 기록되는 박스에 r=name이 붙는다."""
+    _ROLE.append(str(name))
+    try:
+        yield
+    finally:
+        _ROLE.pop()
 
 def _on_canvas(draw_or_img):
     if CANVAS is None:
@@ -39,8 +59,9 @@ def _ptext(self, xy, text, *args, **kw):
         try:
             fnt = kw.get("font")
             b = self.textbbox(xy, str(text), font=fnt, anchor=kw.get("anchor"))
-            BOXES.append({"k": "text", "t": str(text)[:26], "b": [float(v) for v in b],
-                          "fs": float(getattr(fnt, "size", 0)) or None})
+            BOXES.append({"k": "text", "t": str(text), "b": [float(v) for v in b],
+                          "fs": float(getattr(fnt, "size", 0)) or None,
+                          "r": _ROLE[-1] if _ROLE else None})
         except Exception:
             pass
     return _orig_text(self, xy, text, *args, **kw)
@@ -52,7 +73,8 @@ def _pac(self, im, dest=(0, 0), *args, **kw):
     if ENABLED and getattr(im, "qc_text", None):
         BOXES.append({"k": "timg", "t": im.qc_text,
                       "b": [float(dest[0]), float(dest[1]),
-                            float(dest[0] + im.width), float(dest[1] + im.height)]})
+                            float(dest[0] + im.width), float(dest[1] + im.height)],
+                      "r": _ROLE[-1] if _ROLE else None})
     return _orig_ac(self, im, dest, *args, **kw)
 Image.Image.alpha_composite = _pac
 
@@ -62,7 +84,7 @@ def load():
     _oti = rp.text_img
     def ti(t, f, top, bottom=None, pad=10):
         out, w, h = _oti(t, f, top, bottom, pad)
-        out.qc_text = str(t)[:26]
+        out.qc_text = str(t)
         return out, w, h
     rp.text_img = ti
     import render_editorial as EA
@@ -75,7 +97,7 @@ def load():
     _ovt = EA.vtext
     def vt(text, font, fill, ls=3):
         out = _ovt(text, font, fill, ls)
-        out.qc_text = "|" + str(text)[:24]
+        out.qc_text = "|" + str(text)
         return out
     EA.vtext = vt
     import render_editorial_b as EB
@@ -108,7 +130,7 @@ def _merge_runs(boxes, gap=14.0):
                     continue
                 if a.get("fs") != c.get("fs"):
                     a["fs"] = None
-                a["t"] = (a["t"] + c["t"])[:26]
+                a["t"] = a["t"] + c["t"]
                 a["b"] = [min(a["b"][0], c["b"][0]), min(a["b"][1], c["b"][1]),
                           max(a["b"][2], c["b"][2]), max(a["b"][3], c["b"][3])]
                 used[j] = True; changed = True
@@ -139,9 +161,9 @@ def check(boxes, W, H, tol=1.5, depth=3.0):
     for x in bs:
         b = x["b"]
         if b[0] < -tol or b[1] < -tol or b[2] > W + tol or b[3] > H + tol:
-            v.append(f"R1 CANVAS  '{x['t']}' box={list(map(round, b))}")
+            v.append(f"R1 CANVAS  '{x['t'][:26]}' box={list(map(round, b))}")
         elif b[0] < sl - tol or b[2] > sr + tol or b[1] < st - tol or b[3] > sb + tol:
-            v.append(f"R2 SAFE    '{x['t']}' box={list(map(round, b))} safe=[{sl},{st},{sr},{sb}]")
+            v.append(f"R2 SAFE    '{x['t'][:26]}' box={list(map(round, b))} safe=[{sl},{st},{sr},{sb}]")
     for i in range(len(bs)):
         for j in range(i + 1, len(bs)):
             a, c = bs[i]["b"], bs[j]["b"]
@@ -150,7 +172,7 @@ def check(boxes, W, H, tol=1.5, depth=3.0):
             iw = min(a[2], c[2]) - max(a[0], c[0])
             ih = min(a[3], c[3]) - max(a[1], c[1])
             if iw > depth and ih > depth:
-                v.append(f"R3 OVERLAP '{bs[i]['t']}' × '{bs[j]['t']}' depth=({round(iw)},{round(ih)})")
+                v.append(f"R3 OVERLAP '{bs[i]['t'][:26]}' × '{bs[j]['t'][:26]}' depth=({round(iw)},{round(ih)})")
     # R4: 같은 행의 인접 텍스트인데 폰트 크기가 어중간하게 다름(의도된 위계 1.75x 이상은 허용)
     for i in range(len(bs)):
         for j in range(i + 1, len(bs)):
@@ -169,10 +191,114 @@ def check(boxes, W, H, tol=1.5, depth=3.0):
                 continue
             r = max(fa, fc) / min(fa, fc)
             if 1.04 < r < 1.75:
-                v.append(f"R4 SIZE    '{a['t']}'({fa:g}) × '{c['t']}'({fc:g}) 같은 행 크기 불일치")
+                v.append(f"R4 SIZE    '{a['t'][:26]}'({fa:g}) × '{c['t'][:26]}'({fc:g}) 같은 행 크기 불일치")
     return v
 
-def run(name, W, H, fn):
+# ---- 콘텐츠 정합 (규율 v2 · R5~R7) ----
+PLACEHOLDERS = {"", "—", "-", "?", "tbd", "미정", "제목 없음", "대회명", "날짜", "시간", "none"}
+_WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"]
+
+def _norm(s):
+    """존재성 대조용 정규화 — 공백·쉼표·구두점 제거 + casefold."""
+    return re.sub(r"[\s,._·|]+", "", str(s)).casefold()
+
+def parse_money(s):
+    """'30,000,000' / '300만' / '1억 2,000만' / 5000 → 원 단위 int. 실패 시 None."""
+    if s is None:
+        return None
+    if isinstance(s, (int, float)):
+        return int(s)
+    t = str(s).replace(",", "").replace(" ", "")
+    total, matched = 0, False
+    m = re.search(r"(\d+(?:\.\d+)?)억", t)
+    if m:
+        total += int(float(m.group(1)) * 100_000_000); matched = True
+        t = t[m.end():]
+    m = re.search(r"(\d+(?:\.\d+)?)만", t)
+    if m:
+        total += int(float(m.group(1)) * 10_000); matched = True
+    if matched:
+        return total
+    m = re.fullmatch(r"\d+", re.sub(r"[^\d]", "", t) or "")
+    return int(m.group(0)) if m else None
+
+def _range_count(label):
+    """상금 순위 라벨의 인원수: '1st'→1, '10th~12th'/'10~12위'→3."""
+    nums = [int(n) for n in re.findall(r"\d+", str(label))]
+    if len(nums) >= 2 and nums[1] >= nums[0]:
+        return nums[1] - nums[0] + 1
+    return 1
+
+def _parse_date(s, year):
+    """'7월 19일 (토)' / '26.08.02 (토요일)' / '2026-08-02 (토)' → (y,m,d,요일문자) 또는 None."""
+    t = str(s)
+    wd = None
+    m = re.search(r"\(([월화수목금토일])요?일?\)", t)
+    if m:
+        wd = m.group(1)
+    m = re.search(r"(\d{2,4})[.\-/](\d{1,2})[.\-/](\d{1,2})", t)
+    if m:
+        y = int(m.group(1)); y = y + 2000 if y < 100 else y
+        return y, int(m.group(2)), int(m.group(3)), wd
+    m = re.search(r"(\d{1,2})월\s*(\d{1,2})일", t)
+    if m:
+        return year, int(m.group(1)), int(m.group(2)), wd
+    return None
+
+def check_content(spec, boxes, year=2026):
+    """R5 존재성 · R6 수치 정합 · R7 날짜-요일. spec 키: title/date/buyin/gtd(+time),
+    prizes=[(라벨,금액)...], blinds=[(sb,bb)...], year. 없는 키는 해당 검사 생략."""
+    v = []
+    rendered = _norm("".join(b["t"] for b in boxes))
+    # R5 EXIST — 필수 값이 실재하고 placeholder가 아니며 렌더에 나타나는지
+    for key in ("title", "date", "buyin", "gtd", "time"):
+        if key not in spec:
+            continue
+        val = spec.get(key)
+        if val is None or _norm(val) in {_norm(p) for p in PLACEHOLDERS}:
+            v.append(f"R5 EXIST   '{key}' 값이 비었거나 placeholder: {val!r}")
+            continue
+        if _norm(val) not in rendered:
+            v.append(f"R5 EXIST   '{key}'={str(val)[:26]!r} 가 렌더에 나타나지 않음")
+    # R6 MATH — 분배 합은 개런티 미달 금지(개런티=최소 보장), 블라인드 단조 증가
+    gtd = parse_money(spec.get("gtd"))
+    prizes = spec.get("prizes")
+    if gtd and prizes:
+        s = 0
+        for label, amt in prizes:
+            a = parse_money(amt)
+            if a is None:
+                v.append(f"R6 MATH    상금 파싱 실패: {label!r}={amt!r}")
+                s = None; break
+            s += a * _range_count(label)
+        if s is not None and s < gtd:
+            v.append(f"R6 MATH    분배 합 {s:,} < 개런티 {gtd:,} — 보장 미달(허위 광고)")
+    blinds = spec.get("blinds")
+    if blinds:
+        prev = None
+        for i, (sb, bb) in enumerate(blinds, 1):
+            sb, bb = parse_money(sb), parse_money(bb)
+            if sb is None or bb is None or bb < sb:
+                v.append(f"R6 MATH    LV{i} 블라인드 이상: {blinds[i-1]!r}")
+                continue
+            if prev and (sb < prev[0] or bb < prev[1]):
+                v.append(f"R6 MATH    LV{i} 블라인드 역행: {prev} → {(sb, bb)}")
+            prev = (sb, bb)
+    # R7 DATE — 표기된 요일이 실제 달력과 일치
+    if spec.get("date"):
+        p = _parse_date(spec["date"], spec.get("year", year))
+        if p and p[3]:
+            import datetime
+            try:
+                actual = _WEEKDAYS[datetime.date(p[0], p[1], p[2]).weekday()]
+                if actual != p[3]:
+                    v.append(f"R7 DATE    {spec['date']!r} — 실제 요일은 ({actual})")
+            except ValueError:
+                v.append(f"R7 DATE    존재하지 않는 날짜: {spec['date']!r}")
+    return v
+
+def run(name, W, H, fn, spec=None):
+    """렌더 검증(R1~R4) + spec이 있으면 콘텐츠 정합(R5~R7)까지."""
     global CANVAS
     CANVAS = (W, H)
     BOXES.clear()
@@ -180,6 +306,8 @@ def run(name, W, H, fn):
     fn()
     snap = list(BOXES)
     v = check(snap, W, H)
+    if spec:
+        v += check_content(spec, snap)
     print(f"[QC] {name}: " + ("PASS ✅" if not v else f"FAIL ❌ {len(v)}건"))
     for x in v[:20]:
         print("     -", x)
