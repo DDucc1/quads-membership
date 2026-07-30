@@ -24,7 +24,7 @@ def oswald(s, w=500): return _var(ASSET + "Oswald.ttf", s, [w])
 def playfair(s, w=700): return _var(ASSET + "Playfair.ttf", s, [w])
 
 # ---------- 텍스처/그레이딩 ----------
-def grade(bg, acc, leak_xy=(0.82, 0.12)):
+def grade(bg, acc, leak_xy=(0.82, 0.12), sc=1):
     Wd, Hd = bg.size
     base = ImageEnhance.Color(bg.convert("RGB")).enhance(1.16)
     base = ImageEnhance.Contrast(base).enhance(1.12)
@@ -37,12 +37,12 @@ def grade(bg, acc, leak_xy=(0.82, 0.12)):
     img.alpha_composite(dk)
     lk = Image.new("L", (Wd, Hd), 0)
     lx, ly = int(Wd * leak_xy[0]), int(Hd * leak_xy[1])
-    ImageDraw.Draw(lk).ellipse([lx - 360, ly - 360, lx + 360, ly + 360], fill=120)
-    lk = lk.filter(ImageFilter.GaussianBlur(150))
+    r360 = int(360 * sc); ImageDraw.Draw(lk).ellipse([lx - r360, ly - r360, lx + r360, ly + r360], fill=120)
+    lk = lk.filter(ImageFilter.GaussianBlur(150 * sc))
     leak = Image.new("RGBA", (Wd, Hd), acc + (255,)); leak.putalpha(lk)
     img = Image.alpha_composite(img, leak)
-    gl = Image.new("L", (Wd, Hd), 0); ImageDraw.Draw(gl).ellipse([-340, -420, 520, 380], fill=46)
-    gl = gl.filter(ImageFilter.GaussianBlur(130))
+    gl = Image.new("L", (Wd, Hd), 0); ImageDraw.Draw(gl).ellipse([-340 * sc, -420 * sc, 520 * sc, 380 * sc], fill=46)
+    gl = gl.filter(ImageFilter.GaussianBlur(130 * sc))
     t2 = Image.new("RGBA", (Wd, Hd), acc + (255,)); t2.putalpha(gl)
     img = Image.alpha_composite(img, t2)
     # 보케 파티클(깊이) — 결정적 시드(테마 악센트 기반), 상단 2/3에 분포
@@ -52,19 +52,19 @@ def grade(bg, acc, leak_xy=(0.82, 0.12)):
     for _ in range(46):
         x = rng.randint(0, Wd); y = int(rng.random() ** 1.4 * Hd * 0.68)
         small = rng.random() < 0.75
-        r = rng.randint(2, 7) if small else rng.randint(10, 24)
+        r = int(rng.randint(2, 7) * sc) if small else int(rng.randint(10, 24) * sc)
         al = rng.randint(26, 66) if small else rng.randint(10, 24)
         col = acc if rng.random() < 0.6 else (255, 244, 222)
         bd.ellipse([x - r, y - r, x + r, y + r], fill=col + (al,))
-    img.alpha_composite(bok.filter(ImageFilter.GaussianBlur(2.5)))
+    img.alpha_composite(bok.filter(ImageFilter.GaussianBlur(2.5 * sc)))
     bok2 = Image.new("RGBA", (Wd, Hd), (0, 0, 0, 0)); bd2 = ImageDraw.Draw(bok2)
     for _ in range(7):
         x = rng.randint(0, Wd); y = int(rng.random() * Hd * 0.55)
-        r = rng.randint(34, 68)
+        r = int(rng.randint(34, 68) * sc)
         bd2.ellipse([x - r, y - r, x + r, y + r], fill=acc + (rng.randint(6, 13),))
-    img.alpha_composite(bok2.filter(ImageFilter.GaussianBlur(18)))
+    img.alpha_composite(bok2.filter(ImageFilter.GaussianBlur(18 * sc)))
     sl = Image.new("RGBA", (Wd, Hd), (0, 0, 0, 0)); sd = ImageDraw.Draw(sl)
-    for y in range(0, Hd, 3): sd.line([(0, y), (Wd, y)], fill=(0, 0, 0, 12), width=1)
+    for y in range(0, Hd, max(1, int(3 * sc))): sd.line([(0, y), (Wd, y)], fill=(0, 0, 0, 12), width=max(1, int(sc)))
     img.alpha_composite(sl)
     grain = Image.effect_noise((Wd, Hd), 22).convert("L")
     img.alpha_composite(Image.merge("RGBA", (grain, grain, grain, Image.new("L", (Wd, Hd), 10))))

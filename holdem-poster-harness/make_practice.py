@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""실습 러너 — learn/practice 사이클. V6 스트럭처 일체형, 컬러웨이 2종. QC(스펙 포함) 경유."""
+"""실습 러너 — learn/practice 사이클. V6 스트럭처 일체형, 컬러웨이 2종. QC(스펙 포함) 경유.
+DATA/SPEC은 make_hires.py 등에서 재사용(import) — 실행부는 __main__ 가드."""
 import os
 from PIL import Image, ImageDraw
-import qc
-A0, EA, EB, EC = qc.load()
-import render_structure as RS
-from render_poster import noto
-
-os.makedirs("out/practice", exist_ok=True)
 
 BLINDS = [(100, 200), (200, 300), (200, 400), "10 MINUTES BREAK",
           (300, 500), (300, 600), (400, 800), "10 MINUTES BREAK & END REGI",
@@ -57,26 +52,34 @@ SPEC = dict(title=DATA["title"], date="26.08.15 (SAT)", time="13:00",
             buyin="매장이용권 10매 OR NV 시드권", gtd=DATA["gtd"],
             prizes=PRIZES, blinds=[b for b in BLINDS if isinstance(b, tuple)], year=2026)
 
-fails = 0
-fails += len(qc.run("P001_Cyan", RS.W, RS.H,
-                    lambda: RS.render(DATA, "out/practice/p001_cyan.png"), spec=SPEC))
-D2 = dict(DATA, theme="nebula_pink")
-fails += len(qc.run("P001_Pink", RS.W, RS.H,
-                    lambda: RS.render(D2, "out/practice/p001_pink.png"), spec=SPEC))
-qc.ENABLED = False
-print("QC TOTAL:", "ALL PASS ✅" if fails == 0 else f"{fails}건 위반 ❌")
+if __name__ == "__main__":
+    import qc
+    A0, EA, EB, EC = qc.load()
+    import render_structure as RS
+    from render_poster import noto
 
-# 몽타주
-items = [("V6 스트럭처 일체형 — Cyan", "out/practice/p001_cyan.png"),
-         ("V6 스트럭처 일체형 — Pink (컬러웨이)", "out/practice/p001_pink.png")]
-tw = 430; th = int(tw * RS.H / RS.W); lab = 40; gap = 18; top = 60
-Wm = 2 * tw + 3 * gap; Hm = top + th + lab + gap
-s = Image.new("RGB", (Wm, Hm), (12, 12, 18)); dm = ImageDraw.Draw(s)
-dm.text((gap, 22), "실습 p001 — 스트럭처 일체형 (r001 계열)", font=noto(26, 800),
-        fill=(240, 240, 250), anchor="lm")
-for i, (n, p) in enumerate(items):
-    x = gap + i * (tw + gap)
-    s.paste(Image.open(p).convert("RGB").resize((tw, th)), (x, top))
-    dm.rectangle([x, top, x + tw - 1, top + th - 1], outline=(64, 64, 84))
-    dm.text((x + tw / 2, top + th + lab / 2), n, font=noto(16, 700), fill=(214, 218, 232), anchor="mm")
-s.save("out/practice/montage.jpg", quality=90); print("montage", s.size)
+    os.makedirs("out/practice", exist_ok=True)
+
+    fails = 0
+    fails += len(qc.run("P001_Cyan", RS.W, RS.H,
+                        lambda: RS.render(DATA, "out/practice/p001_cyan.png"), spec=SPEC))
+    D2 = dict(DATA, theme="nebula_pink")
+    fails += len(qc.run("P001_Pink", RS.W, RS.H,
+                        lambda: RS.render(D2, "out/practice/p001_pink.png"), spec=SPEC))
+    qc.ENABLED = False
+    print("QC TOTAL:", "ALL PASS ✅" if fails == 0 else f"{fails}건 위반 ❌")
+
+    # 몽타주
+    items = [("V6 스트럭처 일체형 — Cyan", "out/practice/p001_cyan.png"),
+             ("V6 스트럭처 일체형 — Pink (컬러웨이)", "out/practice/p001_pink.png")]
+    tw = 430; th = int(tw * RS.H / RS.W); lab = 40; gap = 18; top = 60
+    Wm = 2 * tw + 3 * gap; Hm = top + th + lab + gap
+    s = Image.new("RGB", (Wm, Hm), (12, 12, 18)); dm = ImageDraw.Draw(s)
+    dm.text((gap, 22), "실습 p001 — 스트럭처 일체형 (r001 계열)", font=noto(26, 800),
+            fill=(240, 240, 250), anchor="lm")
+    for i, (n, p) in enumerate(items):
+        x = gap + i * (tw + gap)
+        s.paste(Image.open(p).convert("RGB").resize((tw, th)), (x, top))
+        dm.rectangle([x, top, x + tw - 1, top + th - 1], outline=(64, 64, 84))
+        dm.text((x + tw / 2, top + th + lab / 2), n, font=noto(16, 700), fill=(214, 218, 232), anchor="mm")
+    s.save("out/practice/montage.jpg", quality=90); print("montage", s.size)
