@@ -1,7 +1,7 @@
 # HANDOFF — 세션 이어서 작업하기
 
 > 새 세션(또는 새 환경)에서 이 문서만 읽으면 바로 이어서 작업할 수 있도록 정리한 현황판.
-> 브랜치: `claude/holdem-poster-harness-I58wz` · 마지막 갱신: 2026-07-26 (원격 퀄리티 세션 이관)
+> 브랜치: `claude/holdem-poster-harness-I58wz` · 마지막 갱신: 2026-07-30 (레퍼런스 학습 체계 + V6 실습)
 
 ---
 
@@ -88,6 +88,19 @@ python3 make_layouts.py           # B형 레이아웃 변형 5장 (V1~V5)
 12. **(2026-07-26) 4건 의사결정 확정** — ① 렌더 위계 "개런티≥대회명>일시>바이인" 그대로 확정 ② 특별 이벤트 **시안 3장 비교 화면 복원** 결정(7항 미결 해소 — app.html에 비교 화면 추가, 백로그) ③ 다음 작업 = 검수 엔진 규율 구현 ④ 트랙별 폴더 분리 — quads-quality worktree 링크 복구로 해결(메인 폴더=하네스 트랙, quads-quality=퀄리티 트랙 fx02).
 13. **(2026-07-26) 규율 v2 콘텐츠 정합군 구현** — qc.py에 R5 EXIST(필수값 실재·placeholder 금지·렌더 출현) / R6 MATH(**분배 합 ≥ 개런티** — 문서의 "≤"는 도메인 오류라 수정, 보장 미달=허위 광고 / 블라인드 단조 증가) / R7 DATE(요일-달력 대조) 구현. `qc.run(..., spec=dict)` 로 활성화. 선결 2건 해소: 계측 문자열 잘림 해제(전문 보존, 위반 메시지만 26자), `qc.role()` 태깅 인프라(R8+ 위계 검사용 — 렌더러 채택은 퀄리티 트랙과 협의). 검증: `qc_selftest.py` 22케이스 + 기존 15렌더 회귀 ALL PASS.
 14. **(2026-07-26) 비주얼 퀄리티 3건 (원격 세션)** — ① `metalize()`: 머니/총보증 메탈릭 마감(6-스톱 그라데이션+베벨, 테마 색조 기반 — 이글=골드포일/울프=크롬, 크기·qc마킹 보존) ② `grade()` 보케 깊이 레이어(소형46+대형7, 결정적 시드, A/B/C/V1~V5 전체) ③ `disp_mixed()/fit_disp()`: BUY-IN·스탯 값을 타이틀과 동일한 Bebas 디스플레이로 통일 — 한글은 Noto 0.8배 혼합·베이스라인 정렬(Bebas 한글 글리프 부재 해결). EB+layout_variants 적용, 15렌더 QC ALL PASS. `out/before/`에 개선 전 백업.
+
+15. **(2026-07-30) 레퍼런스 학습 체계 구축 + 실습 1회차** — 사용자 방향 확정: "제1목적=세련된 완성도,
+   괜찮은 포스터를 지속 제공할 테니 반복 학습으로 유연성·체계성 양립". 구축 내용:
+   ① `learn/` 학습 인프라 — README(파이프라인 7단계: 수집→기록→증류→승인→구현→실습→피드백),
+   `craft-points.md`(완성도 판별 포인트 30종: T타이포/L빛/C색/S표/H히어로/I위계/F질감, 측정 기준 포함),
+   `refs/r001~r006`(로컬 폴더 5장 + 채팅 이미지 + iposter.kr 14미디어 + WFP 검색 11장 분석),
+   `distilled.md`(패턴 보드 P1~P12, 후보→승인→구현→졸업 상태 추적).
+   ② `craft_lab.py` — 실험 스테이징: neon_text(P1)/ghost_title(P2)/flare(P3)/header_bar·zebra·break_band(P4)/
+   sparkle(P12)/panel(QC 패널 선언). 졸업 기준: 실습 2회 PASS + 긍정 피드백 → render_editorial 공용부로.
+   ③ `render_structure.py` — **V6 스트럭처 일체형**(r001 계열 실습): 고스트+네온 GTD+플레어 헤더,
+   좌 INFORMATION/PRIZE/DESCRIPTION + 우 BLIND 풀테이블(30LV+브레이크 밴드 7), 컬러웨이 2종. QC R1~R7 ALL PASS.
+   ④ 기술 결함 3건 수정 기록(p001.md): PIL paste 알파 이중 감쇠 / 네온 halo·코어 QC 분리 / 컬럼 panel 선언.
+   실습 러너: `make_practice.py`. 다음: 사용자 피드백 → p002 반복.
 
 ## 4.5. 통합 앱 프로토타입 (`demos/app.html`, 2026-07-15)
 
