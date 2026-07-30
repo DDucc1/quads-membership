@@ -1,0 +1,242 @@
+<title>NOVA CHAMPIONS CUP — 웹 포스터 (V6 실습 p001)</title>
+<style>
+@font-face{
+  font-family:'BebasWeb';
+  src:url(data:font/ttf;base64,__BEBAS_B64__) format('truetype');
+  font-display:block;
+}
+:root{
+  --ink:#070b13;
+  --paper:#0a0f1a;
+  --kor:'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+  --disp:'BebasWeb','Arial Narrow',sans-serif;
+}
+/* 컬러웨이 — 하네스 theme_palette와 동일 유도 규칙 (C4) */
+.poster[data-cw="cyan"]{
+  --acc:#9bd4ff; --acc-soft:#cfe9ff; --acc-deep:#274664;
+  --beam:rgba(150,205,255,.16); --hi:#f2f6fb; --lo:#c3ccdb; --line:#3a4a62;
+}
+.poster[data-cw="pink"]{
+  --acc:#ff9ed2; --acc-soft:#ffd0e9; --acc-deep:#5c2c48;
+  --beam:rgba(255,158,210,.14); --hi:#fbf3f8; --lo:#d8c8d3; --line:#5a3a50;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--ink)}
+body{font-family:var(--kor);color:#e8edf5;-webkit-font-smoothing:antialiased}
+
+.bar{position:fixed;top:14px;right:16px;z-index:50;display:flex;gap:8px;align-items:center}
+.bar .tag{font-size:12px;letter-spacing:.08em;color:#8a94a8;margin-right:6px}
+.cw{cursor:pointer;border:1px solid #3a4356;background:#121826;color:#cfd6e4;
+  font-family:var(--kor);font-size:12px;padding:6px 14px;border-radius:999px;transition:.2s}
+.cw:hover{border-color:#5a6a86}
+.cw:focus-visible{outline:2px solid #9bd4ff;outline-offset:2px}
+.cw[aria-pressed="true"]{background:#e8edf5;color:#0a0f1a;border-color:#e8edf5}
+
+.stage{display:flex;justify-content:center;padding:56px 0 40px}
+.fit{transform-origin:top center}
+
+/* ───────── 포스터 캔버스 1080×1900 ───────── */
+.poster{position:relative;width:1080px;height:1900px;overflow:hidden;background:var(--paper)}
+/* 배경: 성운 빔(C2) + 비네트(F4) + 그레인(F2) */
+.bg,.bg::before,.bg::after{position:absolute;inset:0}
+.bg{background:
+  radial-gradient(90% 34% at 85% 6%, var(--beam), transparent 60%),
+  radial-gradient(60% 26% at 12% 2%, var(--beam), transparent 65%),
+  linear-gradient(180deg,#0d1524 0%,#0a0f1a 34%,#05080f 100%)}
+.bg::before{content:'';background:
+  radial-gradient(20% 46% at 50% 26%, var(--beam), transparent 70%);
+  filter:blur(6px)}
+.bg::after{content:'';background:
+  radial-gradient(130% 90% at 50% 42%, transparent 55%, rgba(0,0,0,.55) 100%)}
+.grain{position:absolute;inset:0;opacity:.05;background-image:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E")}
+.bokeh{position:absolute;border-radius:50%;background:var(--acc);filter:blur(10px);opacity:.10;
+  animation:drift 26s ease-in-out infinite alternate}
+.bokeh.b2{animation-duration:34s;opacity:.07}
+@keyframes drift{from{transform:translateY(0)}to{transform:translateY(34px)}}
+
+/* T1 고스트 타이틀 — 장식, 상단 크롭 */
+.ghost{position:absolute;top:-66px;left:50%;transform:translateX(-50%);white-space:nowrap;
+  font-family:var(--disp);font-size:212px;letter-spacing:.11em;color:var(--acc);opacity:.20;
+  line-height:1;pointer-events:none;user-select:none}
+
+/* L3 스파클 */
+.sp{position:absolute;pointer-events:none;color:var(--acc-soft);
+  animation:tw 3.4s ease-in-out infinite}
+.sp svg{display:block}
+.sp.s2{animation-delay:1.1s}.sp.s3{animation-delay:2.2s}
+@keyframes tw{0%,100%{opacity:.45;transform:scale(.9)}50%{opacity:1;transform:scale(1.06)}}
+
+/* T2 킥커(대회명) */
+.kicker{position:absolute;top:172px;width:100%;text-align:center;
+  font-family:var(--disp);font-size:52px;letter-spacing:.30em;text-indent:.30em;
+  color:var(--acc-soft);opacity:.94}
+
+/* L1 네온 GTD — 코어 백색 + 액센트 halo (T3/T5) */
+.gtd{position:absolute;top:222px;width:100%;text-align:center;
+  font-family:var(--disp);font-size:176px;line-height:1;color:#fff;
+  letter-spacing:.02em;font-variant-numeric:tabular-nums;
+  text-shadow:0 0 6px rgba(255,255,255,.9),0 0 18px var(--acc),0 0 42px var(--acc),0 0 90px var(--acc);
+  animation:pulse 4.5s ease-in-out infinite}
+.gtd .unit{font-size:52%;letter-spacing:.04em;margin-left:12px}
+@keyframes pulse{0%,100%{text-shadow:0 0 6px rgba(255,255,255,.9),0 0 18px var(--acc),0 0 42px var(--acc),0 0 90px var(--acc)}
+  50%{text-shadow:0 0 8px rgba(255,255,255,1),0 0 26px var(--acc),0 0 60px var(--acc),0 0 120px var(--acc)}}
+
+/* L2 호라이즌 플레어 */
+.flare{position:absolute;top:428px;left:50%;transform:translate(-50%,-50%);width:960px;height:72px;
+  background:radial-gradient(50% 50% at 50% 50%, var(--acc) 0%, transparent 70%);
+  opacity:.55;animation:fl 6s ease-in-out infinite}
+.flare::after{content:'';position:absolute;left:6%;right:6%;top:50%;height:3px;transform:translateY(-50%);
+  background:linear-gradient(90deg,transparent,#fff 45%,#fff 55%,transparent);
+  filter:blur(.4px)}
+@keyframes fl{0%,100%{opacity:.45}50%{opacity:.7}}
+
+/* ── 본문 2컬럼 ── */
+.cols{position:absolute;top:474px;left:65px;right:65px;display:grid;
+  grid-template-columns:450px 470px;justify-content:space-between}
+
+/* S1 헤더 반전 바 — 노치 클립 */
+.hbar{position:relative;height:44px;margin-bottom:10px;background:var(--acc);
+  clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px);
+  display:flex;align-items:center;justify-content:center}
+.hbar span{font-family:var(--disp);font-size:27px;letter-spacing:.28em;text-indent:.28em;color:#0c0a10}
+
+/* S2 지브라 행 */
+.irow{display:flex;align-items:center;height:34px;margin-bottom:5px;padding:0 14px;
+  background:rgba(255,255,255,.055);font-size:16.5px;font-weight:600;color:var(--hi)}
+.irow:nth-child(odd){background:rgba(255,255,255,.10)}
+
+/* S4/S5/S6 상금 표 */
+.prow{display:flex;justify-content:space-between;align-items:center;height:38px;margin-bottom:4px;
+  padding:0 16px;background:rgba(255,255,255,.055);font-family:var(--disp);font-size:27px;
+  color:var(--hi);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.prow:nth-child(even){background:rgba(255,255,255,.10)}
+.prow.first{height:48px;font-size:35px;color:var(--acc);background:rgba(255,255,255,.16);
+  border-left:4px solid var(--acc)}
+
+.desc{margin-top:6px;font-size:14px;line-height:1.8;color:var(--lo)}
+.desc li{list-style:none;padding-left:14px;position:relative}
+.desc li::before{content:'·';position:absolute;left:2px;color:var(--acc-soft)}
+
+/* 블라인드 표 */
+.btab{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.btab th{font-family:var(--disp);font-size:19px;letter-spacing:.14em;color:var(--acc-soft);
+  font-weight:400;padding:4px 0 8px}
+.btab td{font-family:var(--disp);font-size:21.5px;color:var(--hi);height:30px;padding:0}
+.btab .num{text-align:right;padding-right:26px}
+.btab .lv{text-align:center}
+.btab .dur{text-align:right;padding-right:8px;color:var(--lo)}
+.btab tr.z td{background:rgba(255,255,255,.05)}
+.btab tr.brk td{background:color-mix(in srgb, var(--acc) 22%, transparent);
+  text-align:center;font-size:16.5px;letter-spacing:.10em;color:var(--hi)}
+
+/* 풋터 (I2/I4) */
+.footer{position:absolute;left:65px;right:65px;bottom:0;height:160px;border-top:1px solid var(--line)}
+.venue{margin-top:24px;text-align:center;font-size:14.5px;color:var(--lo)}
+.rail{margin-top:26px;display:flex;justify-content:center;gap:58px}
+.rail span{font-family:var(--disp);font-size:23px;letter-spacing:.10em;color:var(--lo);opacity:.85}
+
+@media (prefers-reduced-motion:reduce){
+  .gtd,.flare,.sp,.bokeh{animation:none}
+}
+</style>
+
+<div class="bar" role="group" aria-label="컬러웨이 선택">
+  <span class="tag">COLORWAY</span>
+  <button class="cw" data-cw="cyan" aria-pressed="true">시안</button>
+  <button class="cw" data-cw="pink" aria-pressed="false">핑크</button>
+</div>
+
+<div class="stage"><div class="fit" id="fit">
+<div class="poster" id="poster" data-cw="cyan">
+  <div class="bg"></div><div class="grain"></div>
+  <div class="bokeh" style="left:120px;top:300px;width:46px;height:46px"></div>
+  <div class="bokeh b2" style="left:930px;top:180px;width:70px;height:70px"></div>
+  <div class="bokeh" style="left:820px;top:700px;width:34px;height:34px;animation-delay:-8s"></div>
+  <div class="bokeh b2" style="left:60px;top:1500px;width:56px;height:56px;animation-delay:-14s"></div>
+
+  <div class="ghost" aria-hidden="true">NOVA CHAMPIONS CUP</div>
+
+  <div class="sp" style="left:522px;top:100px"><svg width="38" height="38" viewBox="0 0 38 38" fill="currentColor"><path d="M19 0l3 16 16 3-16 3-3 16-3-16-16-3 16-3z"/></svg></div>
+  <div class="sp s2" style="left:466px;top:86px"><svg width="18" height="18" viewBox="0 0 38 38" fill="currentColor"><path d="M19 0l3 16 16 3-16 3-3 16-3-16-16-3 16-3z"/></svg></div>
+  <div class="sp s3" style="left:586px;top:120px"><svg width="15" height="15" viewBox="0 0 38 38" fill="currentColor"><path d="M19 0l3 16 16 3-16 3-3 16-3-16-16-3 16-3z"/></svg></div>
+
+  <h1 class="kicker">NOVA CHAMPIONS CUP</h1>
+  <div class="gtd">15,000,000<span class="unit">GTD</span></div>
+  <div class="flare" aria-hidden="true"></div>
+
+  <div class="cols">
+    <div class="col-l">
+      <div class="hbar"><span>INFORMATION</span></div>
+      <div id="info"></div>
+      <div class="hbar" style="margin-top:14px"><span>PRIZE POOL</span></div>
+      <div id="prize"></div>
+      <div class="hbar" style="margin-top:14px"><span>EVENT DESCRIPTION</span></div>
+      <ul class="desc" id="desc"></ul>
+    </div>
+    <div class="col-r">
+      <div class="hbar"><span>BLIND STRUCTURE</span></div>
+      <table class="btab" aria-label="블라인드 스트럭처">
+        <thead><tr><th style="width:88px">LEVEL</th><th class="num">SB</th><th class="num">BB</th><th class="num">ANTE</th><th style="width:64px;text-align:right">TIME</th></tr></thead>
+        <tbody id="blinds"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p class="venue">노바 스타디움 강남 · 서울 강남구 노바로 77, 6층 · 문의 010-0000-0000 · 카카오 오픈톡 : 노바홀덤</p>
+    <div class="rail"><span>NOVA</span><span>WINLAB</span><span>CGX</span><span>MRHB</span><span>OPENDECK</span></div>
+  </div>
+</div>
+</div></div>
+
+<script>
+const INFO = [
+  "EVENT NAME : NOVA CHAMPIONS CUP","OFFICIAL VENUE : 노바 스타디움 강남",
+  "DATE : 26.08.15 (SAT)","STARTING TIME : 13:00","TOTAL PRIZE : 15,000,000 GTD",
+  "BUY IN : 매장이용권 10매 OR NV 시드권","FREEZE OUT EVENT",
+  "LATE REG : 16:20 (END OF LEVEL 6)","STARTING CHIPS : 50,000 (250BB)","DURATION : 25 MIN"];
+const PRIZES = [["1ST","5,000,000"],["2ND","3,000,000"],["3RD","2,000,000"],["4TH","1,500,000"],
+  ["5TH","1,200,000"],["6TH","1,000,000"],["7TH","800,000"],["8TH","700,000"],["9TH","600,000"]];
+const DESC = ["모든 토너먼트 룰은 국제 TDA 규정에 의하며 TD의 결정이 최종 결정됩니다.",
+  "빅 블라인드 엔티 방식으로 진행됩니다.","라이브 핸드 중 전자기기 사용을 금지합니다.",
+  "DEAL MAKING 은 허용하지 않습니다.","상금 획득 선수는 세금 신고 의무가 있습니다.",
+  "본인 계좌로만 후원 시상금을 받을 수 있습니다."];
+const BLINDS = [[100,200],[200,300],[200,400],"10 MINUTES BREAK",
+  [300,500],[300,600],[400,800],"10 MINUTES BREAK & END REGI",
+  [500,1000],[600,1200],[1000,1500],[1000,2000],"60 MINUTES DINNER BREAK & CHIP RACE 100",
+  [1500,2500],[1500,3000],[2000,4000],[3000,5000],"10 MINUTES BREAK & CHIP RACE 500",
+  [3000,6000],[4000,8000],[5000,10000],[6000,12000],"10 MINUTES BREAK & CHIP RACE 1000",
+  [10000,15000],[10000,20000],[15000,25000],[15000,30000],"10 MINUTES BREAK",
+  [20000,40000],[25000,50000],[30000,60000],[40000,80000],"10 MINUTES BREAK & CHIP RACE 5000",
+  [50000,100000],[60000,120000],[75000,150000],[100000,200000]];
+
+const $ = s => document.querySelector(s);
+$("#info").innerHTML = INFO.map(t=>`<div class="irow">${t}</div>`).join("");
+$("#prize").innerHTML = PRIZES.map(([r,a],i)=>
+  `<div class="prow${i===0?" first":""}"><span>${r}</span><span>${a}</span></div>`).join("");
+$("#desc").innerHTML = DESC.map(t=>`<li>${t}</li>`).join("");
+const fmt = n => n.toLocaleString("en-US");
+let lv=0, zi=0;
+$("#blinds").innerHTML = BLINDS.map(b=>{
+  if(typeof b==="string"){ zi=0; return `<tr class="brk"><td colspan="5">${b}</td></tr>`; }
+  lv++; const z = (zi++%2===0)?" class=\"z\"":"";
+  return `<tr${z}><td class="lv">${lv}</td><td class="num">${fmt(b[0])}</td><td class="num">${fmt(b[1])}</td><td class="num">${fmt(b[1])}</td><td class="dur">25</td></tr>`;
+}).join("");
+
+// 컬러웨이 토글 (C4)
+document.querySelectorAll(".cw").forEach(btn=>btn.addEventListener("click",()=>{
+  document.querySelectorAll(".cw").forEach(b=>b.setAttribute("aria-pressed", String(b===btn)));
+  $("#poster").dataset.cw = btn.dataset.cw;
+}));
+
+// 뷰포트 맞춤 스케일 (1080px 고정 디자인)
+const fit = ()=>{
+  const w = window.innerWidth || 1080;
+  const s = Math.min(1, Math.max(0.2, (w-24)/1080));
+  $("#fit").style.transform = `scale(${s})`;
+  $("#fit").style.height = `${1900*s}px`;
+  $("#fit").style.width = `1080px`;
+};
+window.addEventListener("resize",fit); fit();
+</script>

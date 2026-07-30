@@ -101,6 +101,10 @@ python3 make_layouts.py           # B형 레이아웃 변형 5장 (V1~V5)
    좌 INFORMATION/PRIZE/DESCRIPTION + 우 BLIND 풀테이블(30LV+브레이크 밴드 7), 컬러웨이 2종. QC R1~R7 ALL PASS.
    ④ 기술 결함 3건 수정 기록(p001.md): PIL paste 알파 이중 감쇠 / 네온 halo·코어 QC 분리 / 컬럼 panel 선언.
    실습 러너: `make_practice.py`. 다음: 사용자 피드백 → p002 반복.
+   ⑤ **웹 포스터 버전**(사용자 요청 "이미지 말고 HTML로") — `demos/web_poster_template.html` + `demos/build_web_poster.py`
+   (Bebas base64 주입 빌드, 산출물 web_poster.html은 비커밋). p001과 동일 디자인 + 네온 펄스/스파클/보케 모션
+   + 컬러웨이 토글(시안/핑크), 1080px 고정 디자인 뷰포트 스케일링, reduced-motion 대응.
+   아티팩트: https://claude.ai/code/artifact/243711b9-dd02-492a-8fed-a89f577cac08
 
 ## 4.5. 통합 앱 프로토타입 (`demos/app.html`, 2026-07-15)
 
