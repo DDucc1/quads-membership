@@ -9,9 +9,10 @@
 | px_29095597.jpg | 후드에서 연기 나는 인물(비식별) | 29095597 | SMOKE BLUFF |
 | px_9859353.jpg | 카드 부채 펼친 손 | 9859353 | GOLDEN FAN |
 | px_4253621.jpg | 블랙 에이스 4장 | 4253621 | BLACK ACES |
-| px_33006404.jpg | 스포트라이트 로브 인물 | 33006404 | (대기) |
-| px_8247082.jpg | 후드 기도 자세(비식별) | 8247082 | (대기) |
-| px_19406595.jpg | 후드+마스크 | 19406595 | (대기) |
+| px_33006404.jpg | 스포트라이트 로브 인물 | 33006404 | THE PILGRIM |
+| px_8247082.jpg | 후드 기도 자세(비식별) | 8247082 | LAST PRAYER |
+| px_19406595.jpg | 후드+마스크 | 19406595 | SILENT MASK |
+| px_35448382.jpg | 25K 칩 타워(다크 레더) | 35448382 | TOWER 25K |
 
 주의: assets/는 gitignore 대상 — 파일 자체는 커밋되지 않으므로 재복원 시
 `https://images.pexels.com/photos/{id}/pexels-photo-{id}.jpeg?auto=compress&cs=tinysrgb&w=1600` 로 재다운로드.

@@ -20,6 +20,18 @@ VARIANTS = [
     dict(BASE, hero="assets/heroes/px_4253621.jpg", theme="", accent=(255, 76, 56),
          title="BLACK ACES", subtitle="FREEZE OUT", ktitle="블랙 에이스 프리즈아웃",
          hook=list("에이스 두 장, 리버에서 우는 이유")),
+    dict(BASE, hero="assets/heroes/px_33006404.jpg", theme="", accent=(180, 77, 255),
+         title="THE PILGRIM", subtitle="MONDAY DEEPRUN", ktitle="더 필그림 먼데이",
+         hook=list("순례는 끝났다, 이제 쇼다운이다")),
+    dict(BASE, hero="assets/heroes/px_8247082.jpg", theme="", accent=(34, 211, 255),
+         title="LAST PRAYER", subtitle="BOUNTY HUNTER", ktitle="라스트 프레이 바운티",
+         hook=list("기도는 짧게, 밸류는 길게")),
+    dict(BASE, hero="assets/heroes/px_19406595.jpg", theme="", accent=(23, 232, 138),
+         title="SILENT MASK", subtitle="MYSTERY STACK", ktitle="사일런트 마스크",
+         hook=list("표정을 지운 자가 텔을 지운다")),
+    dict(BASE, hero="assets/heroes/px_35448382.jpg", theme="", accent=(255, 182, 46),
+         title="TOWER 25K", subtitle="HIGH ROLLER", ktitle="타워 하이롤러",
+         hook=list("탑은 무너지라고 쌓는 게 아니다")),
 ]
 
 fails = 0
