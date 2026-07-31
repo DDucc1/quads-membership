@@ -81,12 +81,15 @@ body{font-family:var(--kor);color:#e8edf5;-webkit-font-smoothing:antialiased;pad
 .foot .rail{margin:24px 0 30px;display:flex;justify-content:center;gap:58px}
 .foot .rail span{font-family:var(--disp);font-size:23px;letter-spacing:.10em;color:var(--lo);opacity:.85}
 /* 컬러웨이 변수 (C4 — theme_palette 유도 규칙) */
-[data-cw="cyan"]{--acc:#9bd4ff;--soft:#cfe9ff;--hi:#f2f6fb;--lo:#c3ccdb;--line:#3a4a62;--beam:rgba(150,205,255,.16)}
-[data-cw="pink"]{--acc:#ff9ed2;--soft:#ffd0e9;--hi:#fbf3f8;--lo:#d8c8d3;--line:#5a3a50;--beam:rgba(255,158,210,.14)}
-[data-cw="jade"]{--acc:#50d79b;--soft:#a6ecc9;--hi:#f0faf4;--lo:#c0d4c8;--line:#2e5a44;--beam:rgba(80,215,155,.15)}
-[data-cw="gold"]{--acc:#f5c45c;--soft:#fbe0a4;--hi:#fbf7ee;--lo:#d8cfba;--line:#5c4a26;--beam:rgba(245,196,92,.15)}
-[data-cw="violet"]{--acc:#bb8bee;--soft:#dcc4f8;--hi:#f7f2fc;--lo:#cec4da;--line:#4c3a66;--beam:rgba(186,134,238,.15)}
-[data-cw="red"]{--acc:#f0645f;--soft:#ffaba0;--hi:#fbf1f0;--lo:#dac2c0;--line:#66302e;--beam:rgba(236,84,86,.14)}
+/* B4: 고채도 네온 대역 (WFP 실측 계열) */
+[data-cw="cyan"]{--acc:#22d3ff;--soft:#9deeff;--hi:#f2f6fb;--lo:#bcc9d9;--line:#1d4b63;--beam:rgba(34,211,255,.22)}
+[data-cw="pink"]{--acc:#ff3da0;--soft:#ffa4d4;--hi:#fbf3f8;--lo:#dcc3d1;--line:#6e2450;--beam:rgba(255,61,160,.20)}
+[data-cw="jade"]{--acc:#17e88a;--soft:#93f6c8;--hi:#f0faf4;--lo:#bcd6c6;--line:#15603f;--beam:rgba(23,232,138,.20)}
+[data-cw="gold"]{--acc:#ffb62e;--soft:#ffd98c;--hi:#fbf7ee;--lo:#dccfb4;--line:#6b4c14;--beam:rgba(255,182,46,.21)}
+[data-cw="violet"]{--acc:#b44dff;--soft:#d9a6ff;--hi:#f7f2fc;--lo:#cfc2dd;--line:#502577;--beam:rgba(180,77,255,.21)}
+[data-cw="red"]{--acc:#ff4438;--soft:#ffa198;--hi:#fbf1f0;--lo:#dcc0bd;--line:#701f19;--beam:rgba(255,68,56,.20)}
+.stars{font-size:15px;letter-spacing:.34em;text-indent:.34em;color:var(--acc)}
+.ktitle{font-weight:800;color:var(--hi)}
 .sbg{position:absolute;inset:0;background:
   radial-gradient(90% 34% at 85% 6%,var(--beam),transparent 60%),
   radial-gradient(60% 26% at 12% 2%,var(--beam),transparent 65%),
@@ -228,99 +231,121 @@ function buildMain(v){
     <div class="foot"><p class="venue">${NOVA.footer}</p>
       <div class="rail"><span>NOVA HOLDEM</span></div></div></div>`}
 
-/* V1 클래식 스플릿 — 좌 상금 / 우 블라인드 2그룹 */
+/* 공통 헤더 스택 (B5 국문 타이틀 병용 + WFP 별점) */
+function headStack(kor,gtdTop){
+  return `<div class="stars" style="position:absolute;top:96px;width:100%;text-align:center">★ ★ ★ ★ ★</div>
+    <div class="kick" style="top:126px;font-size:28px">${ROYAL.series} · MAIN EVENT</div>
+    <div class="ktitle" style="position:absolute;top:164px;width:100%;text-align:center;font-size:74px;letter-spacing:.06em;text-shadow:0 0 24px color-mix(in srgb,var(--acc) 60%,transparent)">${kor}</div>
+    <div class="gtd" style="top:${gtdTop}px;font-size:148px">${ROYAL.gtd}<span class="unit">GTD</span></div>`}
+const dateLine=(y)=>`<p style="position:absolute;top:${y}px;width:100%;text-align:center;font-size:16px;font-weight:700;color:var(--hi)">DATE : ${ROYAL.date} &nbsp;·&nbsp; BUY IN : ${ROYAL.buyin}</p>`;
+/* 블라인드 톨 그룹 — 행 48px, 브레이크 밴드 포함 (B1 수직 채움용) */
+function blindTall(title,list,lv0,brk,rh=44){let lv=lv0;
+  const rows=list.map((b,i)=>{
+    const br=(brk&&brk.includes(i))?`<tr class="brk"><td colspan="4">10 MIN BREAK</td></tr>`:"";
+    return br+`<tr${i%2===0?' class="z"':''} style="height:${rh}px"><td class="lv">${++lv}</td><td class="num">${fmt(b[0])}</td><td class="num">${fmt(b[1])}</td><td class="num">${fmt(b[1])}</td></tr>`}).join("");
+  return `<div class="bgroup">${title?`<div class="gh">${title}</div>`:""}<table class="btab"><thead><tr><th style="width:70px">LV</th><th class="num">SB</th><th class="num">BB</th><th class="num">ANTE</th></tr></thead><tbody>${rows}</tbody></table></div>`}
+
+/* V1 클래식 스플릿 — 좌 상금+노티스 / 우 블라인드 풀스택 (B2 컬럼 끝 정렬) */
 function buildV1(){
   return `<div class="poster tall" data-cw="violet"><div class="sbg"></div><div class="grain"></div><div class="vig"></div>
     <div class="topbar"><span>${ROYAL.series}</span><span>TOTAL <b>${ROYAL.total}</b> GTD</span></div>
-    <div class="kick" style="top:116px;font-size:30px">CROWN SERIES · MAIN EVENT</div>
-    <div class="gtd" style="top:158px;font-size:132px;letter-spacing:.01em">${ROYAL.title}</div>
-    <div class="gtd" style="top:308px;font-size:150px">${ROYAL.gtd}<span class="unit">GTD</span></div>
-    <div style="position:absolute;top:492px;left:65px;right:65px">${statStrip(ROYAL.stats)}</div>
-    <div class="flare" style="top:610px;width:900px"></div>
-    <div style="position:absolute;top:648px;left:65px;right:65px;display:grid;grid-template-columns:440px 480px;justify-content:space-between">
+    ${headStack("로열 메인 이벤트",260)}
+    <div style="position:absolute;top:448px;left:65px;right:65px">${statStrip(ROYAL.stats)}</div>
+    <div class="flare" style="top:576px;width:920px"></div>
+    <div style="position:absolute;top:614px;left:65px;right:65px;display:grid;grid-template-columns:440px 486px;justify-content:space-between">
       <div><div class="hbar"><span>PRIZE POOL</span></div>${przRows(ROYAL.prizes,10)}
-        <div class="hbar" style="margin-top:16px"><span>NOTICE</span></div><ul class="notice">${ROYAL.notice.map(t=>`<li>${t}</li>`).join("")}</ul></div>
-      <div><div class="hbar"><span>BLIND STRUCTURE</span></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
-          ${blindGroup("LV 1 - 9",ROYAL.bl1,0)}${blindGroup("LV 10 - 18",ROYAL.bl2,9)}</div>
-        <p style="margin-top:14px;text-align:center;font-size:14px;color:var(--lo)">DATE : ${ROYAL.date} · BUY IN : ${ROYAL.buyin}</p></div>
+        <div class="hbar" style="margin-top:14px"><span>NOTICE</span></div>
+        <ul class="notice" style="font-size:15px;line-height:2.0">${ROYAL.notice.map(t=>`<li>${t}</li>`).join("")}</ul>
+        <div class="hbar" style="margin-top:14px"><span>EVENT INFO</span></div>
+        <div class="irow">DATE : ${ROYAL.date}</div><div class="irow">BUY IN : ${ROYAL.buyin}</div>
+        <div class="irow">LATE REG : 14LV 시작 전</div><div class="irow">STARTING CHIPS : 60,000 (300BB)</div></div>
+      <div><div class="hbar"><span>BLIND STRUCTURE</span></div>${blindTall("",ROYAL.bl1.concat(ROYAL.bl2),0,[3,6,9,12,15])}</div>
     </div>${foot(ROYAL)}</div>`}
 
-/* V2 포디움 — 상금 포디움 + 풀폭 블라인드 */
+/* V2 포디움 — 상금 포디움 + 풀폭 블라인드 (B1: 포디움~풋터 연속 채움) */
 function buildV2(){
   const podium=(r,v,h,fs)=>`<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end">
-    <div style="text-align:center;margin-bottom:8px"><div style="font-family:var(--disp);font-size:${fs}px;color:var(--acc)">${r}</div>
-    <div style="font-family:var(--disp);font-size:${fs+6}px;color:var(--hi)">${v}</div></div>
-    <div style="height:${h}px;background:linear-gradient(180deg,color-mix(in srgb,var(--acc) 55%,transparent),color-mix(in srgb,var(--acc) 12%,transparent))"></div></div>`;
+    <div style="text-align:center;margin-bottom:10px"><div style="font-family:var(--disp);font-size:${fs}px;color:var(--acc)">${r}</div>
+    <div style="font-family:var(--disp);font-size:${fs+10}px;color:var(--hi);text-shadow:0 0 16px var(--acc)">${v}</div></div>
+    <div style="height:${h}px;background:linear-gradient(180deg,color-mix(in srgb,var(--acc) 70%,transparent),color-mix(in srgb,var(--acc) 14%,transparent));border-top:3px solid var(--acc)"></div></div>`;
   return `<div class="poster tall" data-cw="red"><div class="sbg"></div><div class="grain"></div><div class="vig"></div>
     <div class="topbar"><span>${ROYAL.series}</span><span>TOTAL <b>${ROYAL.total}</b> GTD</span></div>
-    <div class="kick" style="top:120px;font-size:32px">CROWN SERIES · MAIN EVENT</div>
-    <div class="gtd" style="top:164px;font-size:120px">${ROYAL.title}</div>
-    <div class="gtd" style="top:300px;font-size:146px">${ROYAL.gtd}<span class="unit">GTD</span></div>
-    <div style="position:absolute;top:494px;left:65px;right:65px;display:flex;gap:20px;height:300px;align-items:flex-end">
-      ${podium("2ND","19,000,000",150,30)}${podium("1ST","30,000,000",220,38)}${podium("3RD","13,000,000",120,30)}</div>
-    <div class="flare" style="top:836px;width:920px"></div>
-    <div style="position:absolute;top:872px;left:65px;right:65px">
+    ${headStack("로열 메인 이벤트",260)}
+    <div style="position:absolute;top:452px;left:65px;right:65px;display:flex;gap:22px;height:280px;align-items:flex-end">
+      ${podium("2ND","19,000,000",150,30)}${podium("1ST","30,000,000",226,40)}${podium("3RD","13,000,000",118,30)}</div>
+    <div class="irow" style="position:absolute;top:758px;left:65px;right:65px;justify-content:center;height:40px">4TH 9,500,000 · 5TH 7,500,000 · 6TH 6,000,000 · 7TH 4,900,000 · 8TH 4,000,000 · 9TH 3,400,000</div>
+    <div class="flare" style="top:834px;width:920px"></div>
+    <div style="position:absolute;top:868px;left:65px;right:65px">
       <div class="hbar"><span>BLIND STRUCTURE</span></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px">${blindGroup("LV 1 - 9",ROYAL.bl1,0)}${blindGroup("LV 10 - 18",ROYAL.bl2,9)}</div>
-      <div style="margin-top:20px">${statStrip(ROYAL.stats)}</div>
-      <p style="margin-top:16px;text-align:center;font-size:14.5px;color:var(--lo)">DATE : ${ROYAL.date} · BUY IN : ${ROYAL.buyin} · 4TH 9,500,000 ~ 12TH 2,900,000</p>
-    </div>${foot(ROYAL)}</div>`}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px">${blindTall("LV 1 - 9",ROYAL.bl1,0)}${blindTall("LV 10 - 18",ROYAL.bl2,9)}</div>
+      <div style="margin-top:22px">${statStrip(ROYAL.stats)}</div></div>
+    ${dateLine(1668)}${foot(ROYAL)}</div>`}
 
-/* V3 센터 대칭 — 중앙 스택 + 좌우 플랭킹 */
+/* V3 센터 대칭 — 중앙 상금 레일 + 좌우 블라인드 플랭킹 (B2 3컬럼 끝 정렬) */
 function buildV3(){
   return `<div class="poster tall" data-cw="gold"><div class="sbg"></div><div class="grain"></div><div class="vig"></div>
-    <div class="ghost" style="font-size:190px">ROYAL MAIN EVENT</div>
-    <div class="kick" style="top:150px;font-size:30px">${ROYAL.series}</div>
-    <div class="gtd" style="top:196px;font-size:118px">${ROYAL.title}</div>
-    <div class="gtd" style="top:330px;font-size:150px">${ROYAL.gtd}<span class="unit">GTD</span></div>
-    <div class="flare" style="top:520px;width:940px"></div>
-    <div style="position:absolute;top:560px;left:65px;right:65px;display:grid;grid-template-columns:330px 330px;justify-content:space-between">
-      <div><div class="hbar"><span>LV 1 - 9</span></div>${blindGroup("",ROYAL.bl1,0)}</div>
-      <div><div class="hbar"><span>LV 10 - 18</span></div>${blindGroup("",ROYAL.bl2,9)}</div>
+    <div class="ghost" style="font-size:190px">로열 메인 이벤트</div>
+    ${headStack("로열 메인 이벤트",260)}
+    <div class="flare" style="top:452px;width:940px"></div>
+    <div style="position:absolute;top:492px;left:65px;right:65px;display:grid;grid-template-columns:330px 330px;justify-content:space-between">
+      <div><div class="hbar"><span>LV 1 - 9</span></div>${blindTall("",ROYAL.bl1,0)}
+        <div class="hbar" style="margin-top:14px"><span>EVENT INFO</span></div>
+        <div class="irow">DATE : ${ROYAL.date}</div><div class="irow">BUY IN : ${ROYAL.buyin}</div></div>
+      <div><div class="hbar"><span>LV 10 - 18</span></div>${blindTall("",ROYAL.bl2,9)}
+        <div class="hbar" style="margin-top:14px"><span>NOTICE</span></div>
+        <ul class="notice" style="font-size:14px">${ROYAL.notice.slice(0,3).map(t=>`<li>${t}</li>`).join("")}</ul></div>
     </div>
-    <div style="position:absolute;top:566px;left:426px;width:228px;text-align:center">
-      <div style="font-family:var(--disp);font-size:26px;letter-spacing:.2em;color:var(--soft);margin-bottom:12px">PRIZE</div>
-      ${ROYAL.prizes.slice(0,8).map(([r,v],i)=>`<div style="margin-bottom:10px"><div style="font-family:var(--disp);font-size:${i===0?30:20}px;color:${i===0?"var(--acc)":"var(--lo)"}">${r}</div><div style="font-family:var(--disp);font-size:${i===0?34:24}px;color:var(--hi)">${v}</div></div>`).join("")}
+    <div style="position:absolute;top:498px;left:426px;width:228px;text-align:center">
+      <div style="font-family:var(--disp);font-size:28px;letter-spacing:.2em;color:var(--soft)">PRIZE</div>
+      <div class="stars" style="margin:6px 0 10px">★ ★ ★</div>
+      ${ROYAL.prizes.map(([r,v],i)=>`<div style="margin-bottom:${i===0?14:11}px"><div style="font-family:var(--disp);font-size:${i===0?30:19}px;color:${i===0?"var(--acc)":"var(--lo)"}">${r}</div><div style="font-family:var(--disp);font-size:${i===0?36:23}px;color:var(--hi)${i===0?";text-shadow:0 0 14px var(--acc)":""}">${v}</div></div>`).join("")}
     </div>
     <div style="position:absolute;top:1560px;left:65px;right:65px">${statStrip(ROYAL.stats)}</div>
     ${foot(ROYAL)}</div>`}
 
-/* V4 사이드바 — 블라인드 메인 + 우측 사이드바 */
+/* V4 사이드바 — 상단 히어로+상금 사이드바 / 하단 풀폭 블라인드+노티스 (B1/B2) */
 function buildV4(){
   return `<div class="poster tall" data-cw="cyan"><div class="sbg"></div><div class="grain"></div><div class="vig"></div>
     <div class="topbar"><span>${ROYAL.series}</span><span>TOTAL <b>${ROYAL.total}</b> GTD</span></div>
-    <div style="position:absolute;top:104px;left:65px;width:560px">
-      <div style="font-family:var(--disp);font-size:96px;line-height:1.02;color:#fff;text-shadow:0 0 18px var(--acc),0 0 60px var(--acc)">${ROYAL.title}</div>
-      <div style="margin-top:10px;font-family:var(--disp);font-size:76px;color:var(--acc)">${ROYAL.gtd}<span style="font-size:52%"> GTD</span></div>
-      <p style="margin-top:8px;font-size:15px;color:var(--lo)">DATE : ${ROYAL.date}<br>BUY IN : ${ROYAL.buyin}</p></div>
-    <div style="position:absolute;top:104px;right:65px;width:330px">
+    <div style="position:absolute;top:112px;left:65px;width:566px">
+      <div class="stars">★ ★ ★ ★ ★</div>
+      <div class="ktitle" style="font-size:60px;margin-top:10px;text-shadow:0 0 20px color-mix(in srgb,var(--acc) 60%,transparent)">로열 메인 이벤트</div>
+      <div style="margin-top:6px;font-family:var(--disp);font-size:78px;line-height:1.04;color:#fff;text-shadow:0 0 18px var(--acc),0 0 60px var(--acc)">${ROYAL.title}</div>
+      <div style="margin-top:12px;font-family:var(--disp);font-size:96px;color:var(--acc);text-shadow:0 0 26px var(--acc)">${ROYAL.gtd}<span style="font-size:50%"> GTD</span></div>
+      <p style="margin-top:14px;font-size:16.5px;font-weight:700;color:var(--hi)">DATE : ${ROYAL.date} &nbsp;·&nbsp; BUY IN : ${ROYAL.buyin}</p>
+      <div style="margin-top:20px">${statStrip(ROYAL.stats)}</div></div>
+    <div style="position:absolute;top:112px;right:65px;width:334px">
       <div class="hbar"><span>PRIZE POOL</span></div>${przRows(ROYAL.prizes,10)}</div>
-    <div class="flare" style="top:566px;width:900px;left:47%"></div>
-    <div style="position:absolute;top:600px;left:65px;width:560px">
+    <div class="flare" style="top:742px;width:920px"></div>
+    <div style="position:absolute;top:782px;left:65px;right:65px">
       <div class="hbar"><span>BLIND STRUCTURE</span></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">${blindGroup("LV 1 - 9",ROYAL.bl1,0)}${blindGroup("LV 10 - 18",ROYAL.bl2,9)}</div></div>
-    <div style="position:absolute;top:1130px;left:65px;width:560px">${statStrip(ROYAL.stats.slice(0,3))}</div>
-    <div style="position:absolute;top:600px;right:65px;width:330px">
-      <div class="hbar"><span>NOTICE</span></div><ul class="notice">${ROYAL.notice.map(t=>`<li>${t}</li>`).join("")}</ul></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px">${blindTall("LV 1 - 9",ROYAL.bl1,0,null,56)}${blindTall("LV 10 - 18",ROYAL.bl2,9,null,56)}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px">
+        <div><div class="hbar"><span>NOTICE</span></div>
+          <ul class="notice" style="font-size:14.5px;line-height:2.05">${ROYAL.notice.map(t=>`<li>${t}</li>`).join("")}</ul></div>
+        <div><div class="hbar"><span>SATELLITE</span></div>
+          <div class="irow">매주 수요일 저녁 8시 · 위너 시드권 2장</div>
+          <div class="irow">바인 : 매장이용권 3매</div>
+          <div class="irow">카카오 오픈톡 예약 시 얼리칩 +5,000</div></div></div>
+      <div class="stars" style="text-align:center;margin-top:18px">★ ★ ★ ★ ★</div></div>
     ${foot(ROYAL)}</div>`}
 
-/* V5 쇼케이스 — 대형 쇼케이스 + 콤팩트 3컬럼 */
+/* V5 쇼케이스 — 초대형 GTD 쇼케이스 + 콤팩트 3컬럼 (WFP 마젠타) */
 function buildV5(){
-  return `<div class="poster tall" data-cw="violet"><div class="sbg"></div><div class="grain"></div><div class="vig"></div>
+  return `<div class="poster tall" data-cw="pink"><div class="sbg"></div><div class="grain"></div><div class="vig"></div>
     <div class="ghost" style="font-size:230px;opacity:.14">100,000,000</div>
-    <div class="kick" style="top:190px;font-size:34px">${ROYAL.series} · MAIN EVENT</div>
-    <div class="gtd" style="top:250px;font-size:208px">${ROYAL.gtd}</div>
-    <div class="kick" style="top:472px;font-size:56px;color:var(--acc)">GUARANTEED</div>
-    <div class="gtd" style="top:566px;font-size:88px">${ROYAL.title}</div>
-    <div class="flare" style="top:700px;width:940px"></div>
-    <div style="position:absolute;top:748px;left:65px;right:65px">${statStrip(ROYAL.stats)}</div>
-    <div style="position:absolute;top:882px;left:65px;right:65px;display:grid;grid-template-columns:300px 300px 300px;justify-content:space-between">
-      <div><div class="hbar"><span>PRIZE</span></div>${przRows(ROYAL.prizes,8)}</div>
-      <div><div class="hbar"><span>LV 1 - 9</span></div>${blindGroup("",ROYAL.bl1,0)}</div>
-      <div><div class="hbar"><span>LV 10 - 18</span></div>${blindGroup("",ROYAL.bl2,9)}</div></div>
-    <p style="position:absolute;top:1620px;width:100%;text-align:center;font-size:14.5px;color:var(--lo)">DATE : ${ROYAL.date} · BUY IN : ${ROYAL.buyin}</p>
-    ${foot(ROYAL)}</div>`}
+    <div class="stars" style="position:absolute;top:104px;width:100%;text-align:center">★ ★ ★ ★ ★</div>
+    <div class="kick" style="top:134px;font-size:32px">${ROYAL.series} · MAIN EVENT</div>
+    <div class="gtd" style="top:176px;font-size:196px">${ROYAL.gtd}</div>
+    <div class="kick" style="top:392px;font-size:52px;color:var(--acc)">GUARANTEED</div>
+    <div class="ktitle" style="position:absolute;top:466px;width:100%;text-align:center;font-size:64px;text-shadow:0 0 22px color-mix(in srgb,var(--acc) 60%,transparent)">로열 메인 이벤트</div>
+    <div class="flare" style="top:576px;width:940px"></div>
+    <div style="position:absolute;top:612px;left:65px;right:65px">${statStrip(ROYAL.stats)}</div>
+    <div style="position:absolute;top:746px;left:65px;right:65px;display:grid;grid-template-columns:300px 300px 300px;justify-content:space-between">
+      <div><div class="hbar"><span>PRIZE</span></div>${przRows(ROYAL.prizes,10)}</div>
+      <div><div class="hbar"><span>LV 1 - 9</span></div>${blindTall("",ROYAL.bl1,0)}</div>
+      <div><div class="hbar"><span>LV 10 - 18</span></div>${blindTall("",ROYAL.bl2,9)}</div></div>
+    ${dateLine(1650)}${foot(ROYAL)}</div>`}
 
 /* ───────── 갤러리 조립 ───────── */
 const MAINS=[
