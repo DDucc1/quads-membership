@@ -39,13 +39,42 @@ def base_bg(theme, acc, k, Wk, Hk):
     return img
 
 
+def hero_bg(path, acc, k, Wk, Hk, mono=0.82):
+    """실사 히어로 파이프라인(p003) — 커버 크롭 + 듀오톤(흑백+액센트 미드톤) 통일 그레이딩.
+    r002 문법: 사진은 단색조로 눌러 톤을 통일하고, 고채도는 GTD 한 곳에만 남긴다(C1)."""
+    from PIL import ImageOps, ImageEnhance
+    src = Image.open(path).convert("RGB")
+    ratio = Wk / Hk
+    if src.width / src.height > ratio:                   # 커버 크롭(중앙)
+        nw = int(src.height * ratio)
+        src = src.crop(((src.width - nw) // 2, 0, (src.width - nw) // 2 + nw, src.height))
+    else:
+        nh = int(src.width / ratio)
+        src = src.crop((0, (src.height - nh) // 3, src.width, (src.height - nh) // 3 + nh))
+    src = src.resize((Wk, Hk))
+    duo = ImageOps.colorize(src.convert("L"), black=(5, 6, 10),
+                            mid=tuple(int(c * 0.42) for c in acc), white=(246, 243, 238))
+    img = Image.blend(src, duo.convert("RGB"), mono)
+    img = ImageEnhance.Contrast(img).enhance(1.16)
+    img = grade(img.convert("RGBA"), acc, leak_xy=(0.5, 0.05), sc=k)
+    col = Image.new("L", (1, Hk), 0)                     # H2 상/하단 스크림
+    for yy in range(Hk):
+        t = yy / Hk
+        v = int(165 * max(0.0, (0.30 - t) / 0.30) ** 1.3) + int(205 * max(0.0, (t - 0.56) / 0.44) ** 1.2)
+        col.putpixel((0, yy), min(225, v))
+    sc_ = Image.new("RGBA", (Wk, Hk), (4, 5, 9, 255)); sc_.putalpha(col.resize((Wk, Hk)))
+    img.alpha_composite(sc_)
+    return img
+
+
 def render(data, out="out/practice/p002.png", scale=1):
     k = scale
     Wk, Hk = W * k, H * k
     CX = Wk // 2
     acc = data["accent"]
     TH = palette(acc)
-    img = base_bg(data["theme"], acc, k, Wk, Hk)
+    img = hero_bg(data["hero"], acc, k, Wk, Hk) if data.get("hero") \
+        else base_bg(data["theme"], acc, k, Wk, Hk)
     d = ImageDraw.Draw(img)
 
     # ── 상단: 날짜 라인(윙 브래킷) — I1: 일시 소형
@@ -70,6 +99,8 @@ def render(data, out="out/practice/p002.png", scale=1):
     f_sub = bebas(50 * k)
     sw = CL._ls_width(data["subtitle"], f_sub, 14 * k)
     CL._ls_draw(d, CX - sw / 2, 322 * k, data["subtitle"], f_sub, TH["title_lo"], 14 * k)
+    if data.get("ktitle"):                               # B5 국문 타이틀 병용
+        d.text((CX, 372 * k), data["ktitle"], font=noto(40 * k, 800), fill=TH["text_hi"], anchor="mm")
 
     # ── 로렐 배지 2개 (H1) — 좌상/우하 비대칭
     CL.laurel_badge(img, d, 158 * k, 520 * k, 92 * k, acc, data["badge_l"],
