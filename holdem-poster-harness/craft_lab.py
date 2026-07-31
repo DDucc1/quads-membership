@@ -134,6 +134,52 @@ def header_bar(img, d, x0, x1, y, h, text, accent, txt_col=(12, 10, 16), f=None)
              txt_col, ls)
 
 
+def laurel_badge(img, d, cx, cy, r, accent, lines, font=None):
+    """P6/H1 로렐 배지 — 월계수 링 + 왕관 + 별 3개 + 중앙 텍스트.
+    장식(링/왕관/별)은 스크래치 합성(비추적), 텍스트는 캔버스 직접(추적)."""
+    import math as _m
+    pad = int(r * 0.55)
+    S = (r + pad) * 2
+    sc = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(sc)
+    ox = oy = r + pad
+    # 어두운 디스크(가독 바탕)
+    sd.ellipse([ox - r, oy - r, ox + r, oy + r], fill=(12, 10, 16, 205))
+    # 월계수 잎 — 상단 80° 갭(왕관 자리)을 비운 링
+    for ang in range(-230, 51, 14):                     # -230°..50° → top(-90°) 주변 비움
+        a = _m.radians(ang)
+        lx, ly = ox + _m.cos(a) * r, oy + _m.sin(a) * r
+        ll = r * 0.16; lw = r * 0.062                   # 잎 길이/폭
+        ca, sa = _m.cos(a), _m.sin(a)
+        sd.polygon([(lx + ca * ll, ly + sa * ll), (lx - sa * lw, ly + ca * lw),
+                    (lx - ca * ll * 0.6, ly - sa * ll * 0.6), (lx + sa * lw, ly - ca * lw)],
+                   fill=accent + (235,))
+    # 왕관 — 링 상단 갭
+    cw = r * 0.42; chh = r * 0.30; cy0 = oy - r - chh * 0.24
+    for i in (-1, 0, 1):
+        px = ox + i * cw * 0.62
+        sd.polygon([(px - cw * 0.26, cy0), (px, cy0 - chh * (1.25 if i == 0 else 1.0)),
+                    (px + cw * 0.26, cy0)], fill=accent + (255,))
+    sd.rectangle([ox - cw * 0.85, cy0, ox + cw * 0.85, cy0 + chh * 0.28], fill=accent + (255,))
+    # 별 3개 — 내부 하단
+    for i in (-1, 0, 1):
+        px, py = ox + i * r * 0.34, oy + r * 0.52
+        rr = r * (0.085 if i == 0 else 0.065)
+        pts = []
+        for j in range(10):
+            a = _m.radians(-90 + j * 36)
+            rad = rr if j % 2 == 0 else rr * 0.45
+            pts.append((px + _m.cos(a) * rad, py + _m.sin(a) * rad))
+        sd.polygon(pts, fill=accent + (255,))
+    img.alpha_composite(sc, (int(cx - r - pad), int(cy - r - pad)))   # 장식 — 비추적
+    # 중앙 텍스트 (추적)
+    f = font or __import__("render_poster").noto(int(r * 0.20), 800)
+    lh = int(r * 0.27)
+    y0 = cy - lh * (len(lines) - 1) / 2 - r * 0.10
+    for i, t in enumerate(lines):
+        d.text((cx, y0 + i * lh), t, font=f, fill=(244, 242, 250), anchor="mm")
+
+
 def panel(box):
     """레이아웃 컬럼을 QC 패널로 등록 — 서로 다른 패널의 텍스트는 R4 크기 비교 제외.
     (frost 패널과 동일 개념 — 시각적으로 분리된 컨텍스트 선언)"""

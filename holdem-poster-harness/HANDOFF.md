@@ -105,6 +105,13 @@ python3 make_layouts.py           # B형 레이아웃 변형 5장 (V1~V5)
    (Bebas base64 주입 빌드, 산출물 web_poster.html은 비커밋). p001과 동일 디자인 + 네온 펄스/스파클/보케 모션
    + 컬러웨이 토글(시안/핑크), 1080px 고정 디자인 뷰포트 스케일링, reduced-motion 대응.
    아티팩트: https://claude.ai/code/artifact/243711b9-dd02-492a-8fed-a89f577cac08
+   ⑥ **4× 인쇄급 + 컨셉 세트** — render_structure scale=k(좌표·폰트·배경 네이티브 k배, grade sc 파라미터),
+   `make_hires.py`(p001 4×) + `make_hires_set.py`(배경컨셉 5종: 골드럭스/오로라/크림슨/딥스페이스/오션틸, 전부 4× QC PASS).
+   ⑦ **실습 p002 메인 포스터형** — `render_main.py`(1080×1620) + `make_p002.py`: 동물 문장 히어로 3종
+   (IRON STAG/LONE WOLF/HIGH EAGLE), P6 로렐배지·P7 문장형 상금·P8 훅카피 첫 구현. QC ALL PASS. 리포트 learn/practice/p002.md.
+   ⑧ **웹 갤러리** — `demos/web_gallery_template.html` + `build_web_gallery.py` → 한 페이지에
+   V6(컬러웨이 6종 토글) + 메인 3종(배경 base64 임베드) + V1~V5 HTML 이식, 필터·라이트박스.
+   아티팩트: https://claude.ai/code/artifact/b4883e46-e8d8-46c5-b66c-0d61f12e3fb5
 
 ## 4.5. 통합 앱 프로토타입 (`demos/app.html`, 2026-07-15)
 

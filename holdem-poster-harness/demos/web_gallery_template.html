@@ -1,0 +1,377 @@
+<title>NOVA 웹 포스터 갤러리 — 유형별 레퍼런스</title>
+<style>
+@font-face{font-family:'BebasWeb';src:url(data:font/ttf;base64,__BEBAS_B64__) format('truetype');font-display:block}
+:root{
+  --ink:#070b13;--kor:'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+  --disp:'BebasWeb','Arial Narrow',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{background:var(--ink)}
+body{font-family:var(--kor);color:#e8edf5;-webkit-font-smoothing:antialiased;padding-bottom:80px}
+
+/* ── 갤러리 프레임 ── */
+.head{padding:44px 24px 8px;text-align:center}
+.head h1{font-family:var(--disp);font-size:44px;letter-spacing:.18em;text-indent:.18em;color:#f0f4fa}
+.head p{margin-top:8px;font-size:13.5px;color:#8a94a8}
+.filters{display:flex;gap:8px;justify-content:center;margin:22px 0 6px;flex-wrap:wrap}
+.fbtn{cursor:pointer;border:1px solid #3a4356;background:#121826;color:#cfd6e4;font-family:var(--kor);
+  font-size:13px;padding:7px 18px;border-radius:999px;transition:.15s}
+.fbtn:hover{border-color:#5a6a86}
+.fbtn:focus-visible{outline:2px solid #9bd4ff;outline-offset:2px}
+.fbtn.on{background:#e8edf5;color:#0a0f1a;border-color:#e8edf5}
+.grid{display:flex;flex-wrap:wrap;gap:26px;justify-content:center;padding:26px 20px;max-width:1560px;margin:0 auto}
+.card{width:346px}
+.card.hide{display:none}
+.frame{position:relative;width:346px;border:1px solid #232b3c;background:#000;overflow:hidden;cursor:zoom-in}
+.frame:focus-visible{outline:2px solid #9bd4ff;outline-offset:2px}
+.frame .pwrap{transform-origin:top left}
+.meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.meta .nm{font-size:14px;font-weight:700;color:#dfe6f2}
+.meta .tp{font-size:11px;letter-spacing:.08em;color:#7d879c;border:1px solid #333c50;padding:2px 8px;border-radius:999px}
+.cwrow{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.cwdot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+.cwdot.on{border-color:#fff}
+.cwdot:focus-visible{outline:2px solid #9bd4ff;outline-offset:2px}
+/* 라이트박스 */
+.lb{position:fixed;inset:0;background:rgba(3,5,10,.9);display:none;align-items:flex-start;justify-content:center;
+  overflow:auto;z-index:100;padding:34px 0}
+.lb.open{display:flex}
+.lb .pwrap{transform-origin:top center}
+.lb .close{position:fixed;top:16px;right:22px;font-size:15px;color:#cfd6e4;background:#121826;
+  border:1px solid #3a4356;border-radius:999px;padding:8px 18px;cursor:pointer;z-index:101}
+
+/* ── 포스터 공통 (1080 고정 설계) ── */
+.poster{position:relative;overflow:hidden;font-variant-numeric:tabular-nums}
+.poster.tall{width:1080px;height:1900px}
+.poster.mid{width:1080px;height:1620px}
+.grain{position:absolute;inset:0;opacity:.05;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E")}
+.vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(130% 90% at 50% 42%,transparent 55%,rgba(0,0,0,.55) 100%)}
+.hbar{position:relative;height:44px;margin-bottom:10px;background:var(--acc);
+  clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px);
+  display:flex;align-items:center;justify-content:center}
+.hbar span{font-family:var(--disp);font-size:27px;letter-spacing:.28em;text-indent:.28em;color:#0c0a10}
+.irow{display:flex;align-items:center;height:34px;margin-bottom:5px;padding:0 14px;
+  background:rgba(255,255,255,.055);font-size:16.5px;font-weight:600;color:var(--hi)}
+.irow:nth-child(odd){background:rgba(255,255,255,.10)}
+.prow{display:flex;justify-content:space-between;align-items:center;height:38px;margin-bottom:4px;
+  padding:0 16px;background:rgba(255,255,255,.055);font-family:var(--disp);font-size:27px;
+  color:var(--hi);letter-spacing:.02em}
+.prow:nth-child(even){background:rgba(255,255,255,.10)}
+.prow.first{height:48px;font-size:35px;color:var(--acc);background:rgba(255,255,255,.16);border-left:4px solid var(--acc)}
+.btab{width:100%;border-collapse:collapse}
+.btab th{font-family:var(--disp);font-size:19px;letter-spacing:.14em;color:var(--soft);font-weight:400;padding:4px 0 8px}
+.btab td{font-family:var(--disp);font-size:21.5px;color:var(--hi);height:30px}
+.btab .num{text-align:right;padding-right:26px}
+.btab .lv{text-align:center}
+.btab .dur{text-align:right;padding-right:8px;color:var(--lo)}
+.btab tr.z td{background:rgba(255,255,255,.05)}
+.btab tr.brk td{background:color-mix(in srgb,var(--acc) 22%,transparent);text-align:center;font-size:16.5px;letter-spacing:.10em;color:var(--hi)}
+.ghost{position:absolute;top:-66px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:var(--disp);
+  font-size:212px;letter-spacing:.11em;color:var(--acc);opacity:.20;line-height:1;pointer-events:none}
+.kick{position:absolute;width:100%;text-align:center;font-family:var(--disp);letter-spacing:.30em;text-indent:.30em;color:var(--soft)}
+.gtd{position:absolute;width:100%;text-align:center;font-family:var(--disp);line-height:1;color:#fff;letter-spacing:.02em;
+  text-shadow:0 0 6px rgba(255,255,255,.9),0 0 18px var(--acc),0 0 42px var(--acc),0 0 90px var(--acc)}
+.gtd .unit{font-size:52%;letter-spacing:.04em;margin-left:12px}
+.flare{position:absolute;left:50%;transform:translate(-50%,-50%);height:72px;
+  background:radial-gradient(50% 50% at 50% 50%,var(--acc) 0%,transparent 70%);opacity:.55}
+.flare::after{content:'';position:absolute;left:6%;right:6%;top:50%;height:3px;transform:translateY(-50%);
+  background:linear-gradient(90deg,transparent,#fff 45%,#fff 55%,transparent)}
+.foot{position:absolute;left:65px;right:65px;bottom:0;border-top:1px solid var(--line)}
+.foot .venue{margin-top:22px;text-align:center;font-size:14.5px;color:var(--lo)}
+.foot .rail{margin:24px 0 30px;display:flex;justify-content:center;gap:58px}
+.foot .rail span{font-family:var(--disp);font-size:23px;letter-spacing:.10em;color:var(--lo);opacity:.85}
+/* 컬러웨이 변수 (C4 — theme_palette 유도 규칙) */
+[data-cw="cyan"]{--acc:#9bd4ff;--soft:#cfe9ff;--hi:#f2f6fb;--lo:#c3ccdb;--line:#3a4a62;--beam:rgba(150,205,255,.16)}
+[data-cw="pink"]{--acc:#ff9ed2;--soft:#ffd0e9;--hi:#fbf3f8;--lo:#d8c8d3;--line:#5a3a50;--beam:rgba(255,158,210,.14)}
+[data-cw="jade"]{--acc:#50d79b;--soft:#a6ecc9;--hi:#f0faf4;--lo:#c0d4c8;--line:#2e5a44;--beam:rgba(80,215,155,.15)}
+[data-cw="gold"]{--acc:#f5c45c;--soft:#fbe0a4;--hi:#fbf7ee;--lo:#d8cfba;--line:#5c4a26;--beam:rgba(245,196,92,.15)}
+[data-cw="violet"]{--acc:#bb8bee;--soft:#dcc4f8;--hi:#f7f2fc;--lo:#cec4da;--line:#4c3a66;--beam:rgba(186,134,238,.15)}
+[data-cw="red"]{--acc:#f0645f;--soft:#ffaba0;--hi:#fbf1f0;--lo:#dac2c0;--line:#66302e;--beam:rgba(236,84,86,.14)}
+.sbg{position:absolute;inset:0;background:
+  radial-gradient(90% 34% at 85% 6%,var(--beam),transparent 60%),
+  radial-gradient(60% 26% at 12% 2%,var(--beam),transparent 65%),
+  radial-gradient(20% 46% at 50% 26%,var(--beam),transparent 70%),
+  linear-gradient(180deg,#0d1524 0%,#0a0f1a 34%,#05080f 100%)}
+/* 메인 포스터형 */
+.mbg{position:absolute;inset:0;background-size:cover;background-position:top center}
+.mscrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,5,9,.82) 0%,transparent 30%,transparent 55%,rgba(4,5,9,.9) 100%)}
+.mdate{position:absolute;top:52px;width:100%;text-align:center;font-family:var(--disp);font-size:30px;color:var(--hi);letter-spacing:.06em}
+.mtitle{position:absolute;top:104px;width:100%;text-align:center;font-family:var(--disp);font-size:138px;line-height:1.05;
+  background:linear-gradient(180deg,#fff 0%,var(--acc) 38%,#fff8e8 46%,var(--acc) 60%,#3a2c10 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 14px rgba(0,0,0,.6))}
+.msub{position:absolute;top:268px;width:100%;text-align:center;font-family:var(--disp);font-size:50px;
+  letter-spacing:.30em;text-indent:.30em;color:var(--soft)}
+.badge{position:absolute;width:200px;height:200px;border-radius:50%;background:rgba(12,10,16,.8);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  font-size:19px;font-weight:800;color:#f4f2fa;line-height:1.4;
+  box-shadow:0 0 0 6px color-mix(in srgb,var(--acc) 75%,transparent), inset 0 0 0 2px color-mix(in srgb,var(--acc) 40%,transparent)}
+.badge::before{content:'♛';position:absolute;top:-34px;font-size:34px;color:var(--acc)}
+.badge::after{content:'★ ★ ★';position:absolute;bottom:22px;font-size:13px;color:var(--acc);letter-spacing:.3em;text-indent:.3em}
+.mhook{position:absolute;width:100%;text-align:center;font-size:21px;font-weight:600;color:var(--hi);letter-spacing:.45em;text-indent:.45em}
+.mline{position:absolute;width:100%;text-align:center;font-weight:700;color:var(--hi)}
+.mprize{position:absolute;width:100%;text-align:center;font-size:18px;font-weight:600;color:var(--lo)}
+/* 레이아웃 변형 공통 */
+.topbar{position:absolute;top:0;left:0;right:0;height:64px;display:flex;justify-content:space-between;align-items:center;
+  padding:0 65px;border-bottom:1px solid var(--line);font-family:var(--disp);font-size:24px;color:var(--lo);letter-spacing:.08em}
+.topbar b{color:var(--acc);font-weight:400}
+.stats{display:flex;gap:14px}
+.stat{flex:1;text-align:center;padding:14px 6px;background:rgba(255,255,255,.06);border-top:2px solid var(--acc)}
+.stat .v{font-family:var(--disp);font-size:30px;color:var(--hi)}
+.stat .l{margin-top:4px;font-size:12.5px;letter-spacing:.1em;color:var(--lo)}
+.bgroup .gh{font-family:var(--disp);font-size:22px;letter-spacing:.2em;color:var(--soft);margin-bottom:8px;text-align:center}
+.notice{font-size:13.5px;line-height:1.75;color:var(--lo)}
+.notice li{list-style:none;padding-left:14px;position:relative}
+.notice li::before{content:'·';position:absolute;left:2px;color:var(--soft)}
+@media (prefers-reduced-motion:no-preference){
+  .gtd{animation:pulse 4.5s ease-in-out infinite}
+  @keyframes pulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
+}
+</style>
+
+<div class="head">
+  <h1>NOVA POSTER GALLERY</h1>
+  <p>홀덤 포스터 하네스 — 유형별 웹 레퍼런스 · 카드를 클릭하면 원본 크기로 열립니다</p>
+</div>
+<div class="filters" role="group" aria-label="유형 필터">
+  <button class="fbtn on" data-f="all">전체</button>
+  <button class="fbtn" data-f="structure">스트럭처 일체형</button>
+  <button class="fbtn" data-f="main">메인 포스터형</button>
+  <button class="fbtn" data-f="layout">레이아웃 변형 V1~V5</button>
+</div>
+<div class="grid" id="grid"></div>
+<div class="lb" id="lb"><button class="close" id="lbClose">닫기 ✕</button><div class="fitbox" id="lbBox"></div></div>
+
+<script>
+/* ───────── 공용 데이터 (가상 브랜드) ───────── */
+const NOVA = {
+  title:"NOVA CHAMPIONS CUP", gtd:"15,000,000",
+  info:["EVENT NAME : NOVA CHAMPIONS CUP","OFFICIAL VENUE : 노바 스타디움 강남","DATE : 26.08.15 (SAT)",
+    "STARTING TIME : 13:00","TOTAL PRIZE : 15,000,000 GTD","BUY IN : 매장이용권 10매 OR NV 시드권",
+    "FREEZE OUT EVENT","LATE REG : 16:20 (END OF LEVEL 6)","STARTING CHIPS : 50,000 (250BB)","DURATION : 25 MIN"],
+  prizes:[["1ST","5,000,000"],["2ND","3,000,000"],["3RD","2,000,000"],["4TH","1,500,000"],["5TH","1,200,000"],
+    ["6TH","1,000,000"],["7TH","800,000"],["8TH","700,000"],["9TH","600,000"]],
+  desc:["모든 토너먼트 룰은 국제 TDA 규정에 의하며 TD의 결정이 최종 결정됩니다.","빅 블라인드 엔티 방식으로 진행됩니다.",
+    "라이브 핸드 중 전자기기 사용을 금지합니다.","DEAL MAKING 은 허용하지 않습니다.",
+    "상금 획득 선수는 세금 신고 의무가 있습니다.","본인 계좌로만 후원 시상금을 받을 수 있습니다."],
+  blinds:[[100,200],[200,300],[200,400],"10 MINUTES BREAK",[300,500],[300,600],[400,800],"10 MINUTES BREAK & END REGI",
+    [500,1000],[600,1200],[1000,1500],[1000,2000],"60 MINUTES DINNER BREAK & CHIP RACE 100",
+    [1500,2500],[1500,3000],[2000,4000],[3000,5000],"10 MINUTES BREAK & CHIP RACE 500",
+    [3000,6000],[4000,8000],[5000,10000],[6000,12000],"10 MINUTES BREAK & CHIP RACE 1000",
+    [10000,15000],[10000,20000],[15000,25000],[15000,30000],"10 MINUTES BREAK",
+    [20000,40000],[25000,50000],[30000,60000],[40000,80000],"10 MINUTES BREAK & CHIP RACE 5000",
+    [50000,100000],[60000,120000],[75000,150000],[100000,200000]],
+  footer:"노바 스타디움 강남 · 서울 강남구 노바로 77, 6층 · 문의 010-0000-0000 · 카카오 오픈톡 : 노바홀덤",
+  sponsors:["NOVA","WINLAB","CGX","MRHB","OPENDECK"]
+};
+const ROYAL = {
+  series:"ROYAL CROWN SERIES", total:"400,000,000", title:"ROYAL MAIN EVENT", gtd:"100,000,000",
+  date:"26.10.17 (SAT) - 14:00", buyin:"MAIN 1 TICKET OR 50RP",
+  stats:[["60,000","STARTING STACK"],["14LV 시작 전","END of REG"],["30 / 25 mins","DURATION"],["400++","ENTRY"]],
+  prizes:[["1st","30,000,000"],["2nd","19,000,000"],["3rd","13,000,000"],["4th","9,500,000"],["5th","7,500,000"],
+    ["6th","6,000,000"],["7th","4,900,000"],["8th","4,000,000"],["9th","3,400,000"],["10th~12th","2,900,000"]],
+  notice:["최종 레지스트레이션은 표기 레벨 시작 전까지 가능합니다.","빅 블라인드 엔티 방식으로 진행됩니다.",
+    "국제 TDA 규정을 준수합니다.","테이블은 9max로 진행합니다."],
+  bl1:[[100,200],[200,300],[200,400],[300,500],[300,600],[400,800],[500,1000],[600,1200],[1000,1500]],
+  bl2:[[1000,2000],[1500,2500],[1500,3000],[2000,4000],[3000,5000],[3000,6000],[4000,8000],[5000,10000],[6000,12000]],
+  footer:"로열포커 스타디움 · 서울 강남구 크라운로 77, 6층 · 카카오 오픈톡 : 로열포커",
+  sponsors:["ROYAL","CHIPSTACK","올인클럽","블러프랩"]
+};
+const fmt=n=>n.toLocaleString("en-US");
+const esc=s=>s;
+
+/* ───────── 컴포넌트 빌더 ───────── */
+const infoRows=a=>a.map(t=>`<div class="irow">${t}</div>`).join("");
+const przRows=(a,n)=>a.slice(0,n).map(([r,v],i)=>`<div class="prow${i===0?" first":""}"><span>${r}</span><span>${v}</span></div>`).join("");
+function blindTable(list){let lv=0,zi=0;
+  const rows=list.map(b=>{
+    if(typeof b==="string"){zi=0;return `<tr class="brk"><td colspan="5">${b}</td></tr>`}
+    lv++;const z=(zi++%2===0)?' class="z"':'';
+    return `<tr${z}><td class="lv">${lv}</td><td class="num">${fmt(b[0])}</td><td class="num">${fmt(b[1])}</td><td class="num">${fmt(b[1])}</td><td class="dur">25</td></tr>`}).join("");
+  return `<table class="btab"><thead><tr><th style="width:88px">LEVEL</th><th class="num">SB</th><th class="num">BB</th><th class="num">ANTE</th><th style="width:64px;text-align:right">TIME</th></tr></thead><tbody>${rows}</tbody></table>`}
+function blindGroup(title,list,lv0){let lv=lv0;
+  const rows=list.map((b,i)=>`<tr${i%2===0?' class="z"':''}><td class="lv">${++lv}</td><td class="num">${fmt(b[0])}</td><td class="num">${fmt(b[1])}</td><td class="num">${fmt(b[1])}</td></tr>`).join("");
+  return `<div class="bgroup"><div class="gh">${title}</div><table class="btab"><tbody>${rows}</tbody></table></div>`}
+const statStrip=a=>`<div class="stats">${a.map(([v,l])=>`<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("")}</div>`;
+const foot=(d)=>`<div class="foot"><p class="venue">${d.footer}</p><div class="rail">${d.sponsors.map(s=>`<span>${s}</span>`).join("")}</div></div>`;
+
+/* ───────── 포스터 빌더 ───────── */
+function buildV6(cw){
+  return `<div class="poster tall" data-cw="${cw}">
+    <div class="sbg"></div><div class="grain"></div><div class="vig"></div>
+    <div class="ghost">NOVA CHAMPIONS CUP</div>
+    <div class="kick" style="top:172px;font-size:52px">NOVA CHAMPIONS CUP</div>
+    <div class="gtd" style="top:222px;font-size:176px">15,000,000<span class="unit">GTD</span></div>
+    <div class="flare" style="top:428px;width:960px"></div>
+    <div style="position:absolute;top:474px;left:65px;right:65px;display:grid;grid-template-columns:450px 470px;justify-content:space-between">
+      <div><div class="hbar"><span>INFORMATION</span></div>${infoRows(NOVA.info)}
+        <div class="hbar" style="margin-top:14px"><span>PRIZE POOL</span></div>${przRows(NOVA.prizes,9)}
+        <div class="hbar" style="margin-top:14px"><span>EVENT DESCRIPTION</span></div>
+        <ul class="notice">${NOVA.desc.map(t=>`<li>${t}</li>`).join("")}</ul></div>
+      <div><div class="hbar"><span>BLIND STRUCTURE</span></div>${blindTable(NOVA.blinds)}</div>
+    </div>${foot(NOVA)}</div>`}
+
+function buildMain(v){
+  return `<div class="poster mid" data-cw="${v.cw}">
+    <div class="mbg" style="background-image:url(${v.bg})"></div><div class="mscrim"></div><div class="grain"></div><div class="vig"></div>
+    <div class="mdate">← &nbsp; ${v.date} &nbsp; →</div>
+    <div class="mtitle">${v.title}</div>
+    <div class="msub">${v.sub}</div>
+    <div class="badge" style="left:58px;top:420px">매장이용권<br>10매 바인</div>
+    <div class="badge" style="right:56px;top:600px">노바 스타디움<br>강남 본점</div>
+    <div class="mhook" style="top:986px">${v.hook}</div>
+    <div class="flare" style="top:1064px;width:880px"></div>
+    <div class="kick" style="top:1112px;font-size:34px">10 TICKET · MAIN EVENT</div>
+    <div class="gtd" style="top:1150px;font-size:150px">15,000,000<span class="unit">GTD</span></div>
+    <div class="mline" style="top:1322px;font-size:19px">BUY IN : 매장이용권 10매 OR NV 시드권 · FREEZE OUT</div>
+    <div class="mprize" style="top:1372px">1위 500만 · 2위 300만 · 3위 200만 · 4위 150만 · 5위 120만</div>
+    <div class="mprize" style="top:1406px">6위 100만 · 7위 80만 · 8위 70만 · 9위 60만</div>
+    <div class="foot"><p class="venue">${NOVA.footer}</p>
+      <div class="rail"><span>NOVA HOLDEM</span></div></div></div>`}
+
+/* V1 클래식 스플릿 — 좌 상금 / 우 블라인드 2그룹 */
+function buildV1(){
+  return `<div class="poster tall" data-cw="violet"><div class="sbg"></div><div class="grain"></div><div class="vig"></div>
+    <div class="topbar"><span>${ROYAL.series}</span><span>TOTAL <b>${ROYAL.total}</b> GTD</span></div>
+    <div class="kick" style="top:116px;font-size:30px">CROWN SERIES · MAIN EVENT</div>
+    <div class="gtd" style="top:158px;font-size:132px;letter-spacing:.01em">${ROYAL.title}</div>
+    <div class="gtd" style="top:308px;font-size:150px">${ROYAL.gtd}<span class="unit">GTD</span></div>
+    <div style="position:absolute;top:492px;left:65px;right:65px">${statStrip(ROYAL.stats)}</div>
+    <div class="flare" style="top:610px;width:900px"></div>
+    <div style="position:absolute;top:648px;left:65px;right:65px;display:grid;grid-template-columns:440px 480px;justify-content:space-between">
+      <div><div class="hbar"><span>PRIZE POOL</span></div>${przRows(ROYAL.prizes,10)}
+        <div class="hbar" style="margin-top:16px"><span>NOTICE</span></div><ul class="notice">${ROYAL.notice.map(t=>`<li>${t}</li>`).join("")}</ul></div>
+      <div><div class="hbar"><span>BLIND STRUCTURE</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+          ${blindGroup("LV 1 - 9",ROYAL.bl1,0)}${blindGroup("LV 10 - 18",ROYAL.bl2,9)}</div>
+        <p style="margin-top:14px;text-align:center;font-size:14px;color:var(--lo)">DATE : ${ROYAL.date} · BUY IN : ${ROYAL.buyin}</p></div>
+    </div>${foot(ROYAL)}</div>`}
+
+/* V2 포디움 — 상금 포디움 + 풀폭 블라인드 */
+function buildV2(){
+  const podium=(r,v,h,fs)=>`<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end">
+    <div style="text-align:center;margin-bottom:8px"><div style="font-family:var(--disp);font-size:${fs}px;color:var(--acc)">${r}</div>
+    <div style="font-family:var(--disp);font-size:${fs+6}px;color:var(--hi)">${v}</div></div>
+    <div style="height:${h}px;background:linear-gradient(180deg,color-mix(in srgb,var(--acc) 55%,transparent),color-mix(in srgb,var(--acc) 12%,transparent))"></div></div>`;
+  return `<div class="poster tall" data-cw="red"><div class="sbg"></div><div class="grain"></div><div class="vig"></div>
+    <div class="topbar"><span>${ROYAL.series}</span><span>TOTAL <b>${ROYAL.total}</b> GTD</span></div>
+    <div class="kick" style="top:120px;font-size:32px">CROWN SERIES · MAIN EVENT</div>
+    <div class="gtd" style="top:164px;font-size:120px">${ROYAL.title}</div>
+    <div class="gtd" style="top:300px;font-size:146px">${ROYAL.gtd}<span class="unit">GTD</span></div>
+    <div style="position:absolute;top:494px;left:65px;right:65px;display:flex;gap:20px;height:300px;align-items:flex-end">
+      ${podium("2ND","19,000,000",150,30)}${podium("1ST","30,000,000",220,38)}${podium("3RD","13,000,000",120,30)}</div>
+    <div class="flare" style="top:836px;width:920px"></div>
+    <div style="position:absolute;top:872px;left:65px;right:65px">
+      <div class="hbar"><span>BLIND STRUCTURE</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px">${blindGroup("LV 1 - 9",ROYAL.bl1,0)}${blindGroup("LV 10 - 18",ROYAL.bl2,9)}</div>
+      <div style="margin-top:20px">${statStrip(ROYAL.stats)}</div>
+      <p style="margin-top:16px;text-align:center;font-size:14.5px;color:var(--lo)">DATE : ${ROYAL.date} · BUY IN : ${ROYAL.buyin} · 4TH 9,500,000 ~ 12TH 2,900,000</p>
+    </div>${foot(ROYAL)}</div>`}
+
+/* V3 센터 대칭 — 중앙 스택 + 좌우 플랭킹 */
+function buildV3(){
+  return `<div class="poster tall" data-cw="gold"><div class="sbg"></div><div class="grain"></div><div class="vig"></div>
+    <div class="ghost" style="font-size:190px">ROYAL MAIN EVENT</div>
+    <div class="kick" style="top:150px;font-size:30px">${ROYAL.series}</div>
+    <div class="gtd" style="top:196px;font-size:118px">${ROYAL.title}</div>
+    <div class="gtd" style="top:330px;font-size:150px">${ROYAL.gtd}<span class="unit">GTD</span></div>
+    <div class="flare" style="top:520px;width:940px"></div>
+    <div style="position:absolute;top:560px;left:65px;right:65px;display:grid;grid-template-columns:330px 330px;justify-content:space-between">
+      <div><div class="hbar"><span>LV 1 - 9</span></div>${blindGroup("",ROYAL.bl1,0)}</div>
+      <div><div class="hbar"><span>LV 10 - 18</span></div>${blindGroup("",ROYAL.bl2,9)}</div>
+    </div>
+    <div style="position:absolute;top:566px;left:426px;width:228px;text-align:center">
+      <div style="font-family:var(--disp);font-size:26px;letter-spacing:.2em;color:var(--soft);margin-bottom:12px">PRIZE</div>
+      ${ROYAL.prizes.slice(0,8).map(([r,v],i)=>`<div style="margin-bottom:10px"><div style="font-family:var(--disp);font-size:${i===0?30:20}px;color:${i===0?"var(--acc)":"var(--lo)"}">${r}</div><div style="font-family:var(--disp);font-size:${i===0?34:24}px;color:var(--hi)">${v}</div></div>`).join("")}
+    </div>
+    <div style="position:absolute;top:1560px;left:65px;right:65px">${statStrip(ROYAL.stats)}</div>
+    ${foot(ROYAL)}</div>`}
+
+/* V4 사이드바 — 블라인드 메인 + 우측 사이드바 */
+function buildV4(){
+  return `<div class="poster tall" data-cw="cyan"><div class="sbg"></div><div class="grain"></div><div class="vig"></div>
+    <div class="topbar"><span>${ROYAL.series}</span><span>TOTAL <b>${ROYAL.total}</b> GTD</span></div>
+    <div style="position:absolute;top:104px;left:65px;width:560px">
+      <div style="font-family:var(--disp);font-size:96px;line-height:1.02;color:#fff;text-shadow:0 0 18px var(--acc),0 0 60px var(--acc)">${ROYAL.title}</div>
+      <div style="margin-top:10px;font-family:var(--disp);font-size:76px;color:var(--acc)">${ROYAL.gtd}<span style="font-size:52%"> GTD</span></div>
+      <p style="margin-top:8px;font-size:15px;color:var(--lo)">DATE : ${ROYAL.date}<br>BUY IN : ${ROYAL.buyin}</p></div>
+    <div style="position:absolute;top:104px;right:65px;width:330px">
+      <div class="hbar"><span>PRIZE POOL</span></div>${przRows(ROYAL.prizes,10)}</div>
+    <div class="flare" style="top:566px;width:900px;left:47%"></div>
+    <div style="position:absolute;top:600px;left:65px;width:560px">
+      <div class="hbar"><span>BLIND STRUCTURE</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">${blindGroup("LV 1 - 9",ROYAL.bl1,0)}${blindGroup("LV 10 - 18",ROYAL.bl2,9)}</div></div>
+    <div style="position:absolute;top:1130px;left:65px;width:560px">${statStrip(ROYAL.stats.slice(0,3))}</div>
+    <div style="position:absolute;top:600px;right:65px;width:330px">
+      <div class="hbar"><span>NOTICE</span></div><ul class="notice">${ROYAL.notice.map(t=>`<li>${t}</li>`).join("")}</ul></div>
+    ${foot(ROYAL)}</div>`}
+
+/* V5 쇼케이스 — 대형 쇼케이스 + 콤팩트 3컬럼 */
+function buildV5(){
+  return `<div class="poster tall" data-cw="violet"><div class="sbg"></div><div class="grain"></div><div class="vig"></div>
+    <div class="ghost" style="font-size:230px;opacity:.14">100,000,000</div>
+    <div class="kick" style="top:190px;font-size:34px">${ROYAL.series} · MAIN EVENT</div>
+    <div class="gtd" style="top:250px;font-size:208px">${ROYAL.gtd}</div>
+    <div class="kick" style="top:472px;font-size:56px;color:var(--acc)">GUARANTEED</div>
+    <div class="gtd" style="top:566px;font-size:88px">${ROYAL.title}</div>
+    <div class="flare" style="top:700px;width:940px"></div>
+    <div style="position:absolute;top:748px;left:65px;right:65px">${statStrip(ROYAL.stats)}</div>
+    <div style="position:absolute;top:882px;left:65px;right:65px;display:grid;grid-template-columns:300px 300px 300px;justify-content:space-between">
+      <div><div class="hbar"><span>PRIZE</span></div>${przRows(ROYAL.prizes,8)}</div>
+      <div><div class="hbar"><span>LV 1 - 9</span></div>${blindGroup("",ROYAL.bl1,0)}</div>
+      <div><div class="hbar"><span>LV 10 - 18</span></div>${blindGroup("",ROYAL.bl2,9)}</div></div>
+    <p style="position:absolute;top:1620px;width:100%;text-align:center;font-size:14.5px;color:var(--lo)">DATE : ${ROYAL.date} · BUY IN : ${ROYAL.buyin}</p>
+    ${foot(ROYAL)}</div>`}
+
+/* ───────── 갤러리 조립 ───────── */
+const MAINS=[
+  {cw:"gold",bg:"__BG_STAG__",date:"26.08.15 (SAT) · 13:00",title:"IRON STAG",sub:"INVITATIONAL",hook:"뿔 세운 자가 팟을 가져간다"},
+  {cw:"cyan",bg:"__BG_WOLF__",date:"26.08.15 (SAT) · 13:00",title:"LONE WOLF",sub:"MIDNIGHT OPEN",hook:"무리는 필요 없다, 올인뿐"},
+  {cw:"gold",bg:"__BG_EAGLE__",date:"26.08.15 (SAT) · 13:00",title:"HIGH EAGLE",sub:"SKY ROLLER",hook:"높이 나는 새가 칩을 본다"},
+];
+const CARDS=[
+  {type:"structure",name:"V6 스트럭처 일체형",h:1900,build:()=>buildV6(document.querySelector("#cw6 .on")?.dataset.c||"cyan"),cwsel:true},
+  {type:"main",name:"메인 — IRON STAG",h:1620,build:()=>buildMain(MAINS[0])},
+  {type:"main",name:"메인 — LONE WOLF",h:1620,build:()=>buildMain(MAINS[1])},
+  {type:"main",name:"메인 — HIGH EAGLE",h:1620,build:()=>buildMain(MAINS[2])},
+  {type:"layout",name:"V1 클래식 스플릿",h:1900,build:buildV1},
+  {type:"layout",name:"V2 포디움",h:1900,build:buildV2},
+  {type:"layout",name:"V3 센터 대칭",h:1900,build:buildV3},
+  {type:"layout",name:"V4 사이드바",h:1900,build:buildV4},
+  {type:"layout",name:"V5 쇼케이스",h:1900,build:buildV5},
+];
+const SC=346/1080;
+const grid=document.getElementById("grid");
+CARDS.forEach((c,i)=>{
+  const card=document.createElement("div");card.className="card";card.dataset.type=c.type;
+  card.innerHTML=`<div class="frame" tabindex="0" role="button" aria-label="${c.name} 크게 보기" style="height:${Math.round(c.h*SC)}px">
+      <div class="pwrap" style="transform:scale(${SC})">${c.build()}</div></div>
+    <div class="meta"><span class="nm">${c.name}</span><span class="tp">${{structure:"스트럭처",main:"메인",layout:"레이아웃"}[c.type]}</span></div>
+    ${c.cwsel?`<div class="cwrow" id="cw6" role="group" aria-label="V6 컬러웨이">${["cyan","pink","jade","gold","violet","red"].map((k,j)=>`<button class="cwdot${j===0?" on":""}" data-c="${k}" aria-label="${k}" style="background:${{cyan:"#9bd4ff",pink:"#ff9ed2",jade:"#50d79b",gold:"#f5c45c",violet:"#bb8bee",red:"#f0645f"}[k]}"></button>`).join("")}</div>`:""}`;
+  grid.appendChild(card);
+  const open=()=>openLb(c);
+  card.querySelector(".frame").addEventListener("click",open);
+  card.querySelector(".frame").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open()}});
+});
+document.querySelectorAll("#cw6 .cwdot").forEach(b=>b.addEventListener("click",e=>{
+  e.stopPropagation();
+  document.querySelectorAll("#cw6 .cwdot").forEach(x=>x.classList.toggle("on",x===b));
+  const card=b.closest(".card");
+  card.querySelector(".pwrap").innerHTML=buildV6(b.dataset.c);
+}));
+/* 필터 */
+document.querySelectorAll(".fbtn").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".fbtn").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll(".card").forEach(c=>c.classList.toggle("hide",b.dataset.f!=="all"&&c.dataset.type!==b.dataset.f));
+}));
+/* 라이트박스 */
+const lb=document.getElementById("lb"),lbBox=document.getElementById("lbBox");
+function openLb(c){
+  const s=Math.min(1,(window.innerWidth-40)/1080);
+  lbBox.innerHTML=`<div class="pwrap" style="transform:scale(${s});width:1080px;height:${Math.round(c.h*s)}px">${c.build()}</div>`;
+  lbBox.style.width=`${1080*s}px`;
+  lb.classList.add("open");document.body.style.overflow="hidden"}
+document.getElementById("lbClose").addEventListener("click",closeLb);
+lb.addEventListener("click",e=>{if(e.target===lb)closeLb()});
+addEventListener("keydown",e=>{if(e.key==="Escape")closeLb()});
+function closeLb(){lb.classList.remove("open");document.body.style.overflow=""}
+</script>
