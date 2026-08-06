@@ -112,6 +112,10 @@ python3 make_layouts.py           # B형 레이아웃 변형 5장 (V1~V5)
    ⑧ **웹 갤러리** — `demos/web_gallery_template.html` + `build_web_gallery.py` → 한 페이지에
    V6(컬러웨이 6종 토글) + 메인 3종(배경 base64 임베드) + V1~V5 HTML 이식, 필터·라이트박스.
    아티팩트: https://claude.ai/code/artifact/b4883e46-e8d8-46c5-b66c-0d61f12e3fb5
+   ⑨ **(2026-07-31) 실사 히어로 두 방향(p003/p004)** — 피드백("아이포스터 느낌 부재=히어로 부재") 해소:
+   방향1 무료스톡(Pexels, 비식별 원칙) 7종 + 방향2 AI 생성(키리스 Pollinations/Flux, gen_hero.py) 3종.
+   render_main.hero_bg 듀오톤 파이프라인(크롭→흑백+액센트 미드톤→grade→스크림) + ktitle(B5).
+   자산 대장 learn/heroes.md(gitignore — 재복원 URL 포함). 밸런스 규율 B1~B5 신설(craft-points).
 
 ## 4.5. 통합 앱 프로토타입 (`demos/app.html`, 2026-07-15)
 
