@@ -16,3 +16,15 @@
 
 주의: assets/는 gitignore 대상 — 파일 자체는 커밋되지 않으므로 재복원 시
 `https://images.pexels.com/photos/{id}/pexels-photo-{id}.jpeg?auto=compress&cs=tinysrgb&w=1600` 로 재다운로드.
+
+## AI 생성 히어로 (방향2 — Pollinations/Flux, 키리스)
+
+| 파일 | 프롬프트 요지 | p004 사용 |
+|---|---|---|
+| ai_ember.jpg | 후드+오렌지 엠버·연기, 림라이트 | EMBER HOOD |
+| ai_chips.jpg | 골드 칩 타워 매크로, 스포트라이트 | GOLD STACK |
+| ai_crown.jpg | golden crown 체스 킹, 대리석+연기 | CROWN GAMBIT |
+| ai_hood_cards.jpg | 후드+카드(테스트, 카드 아티팩트) | (미사용) |
+
+- 재생성: `python gen_hero.py "프롬프트" out.jpg` (기본 pollinations, 키 불요)
+- 한계: 무료 티어 ~627×940 → 1080 업스케일 합성(화면용 OK, 인쇄 4×는 OPENAI_API_KEY 필요)

@@ -14,6 +14,17 @@ WRAP = ("cinematic photorealistic poster hero shot, {subject}, dramatic rim ligh
         "dark moody background, film grain, shallow depth of field, high contrast, "
         "monochromatic color grade, 4k, no text, no watermark")
 
+def gen_pollinations(prompt, out, w=1080, h=1620, seed=7):
+    """키리스 무료(Flux) — 기본 프로바이더. 무료 티어 해상도 상한 ~627×940(요청 비율 유지).
+    화면용 충분·인쇄급(4×)은 키 기반 프로바이더 필요."""
+    import urllib.parse
+    u = ("https://image.pollinations.ai/prompt/"
+         + urllib.parse.quote(WRAP.format(subject=prompt))
+         + f"?width={w}&height={h}&model=flux&nologo=true&seed={seed}")
+    req = urllib.request.Request(u, headers={"User-Agent": "curl/8"})
+    open(out, "wb").write(urllib.request.urlopen(req, timeout=180).read())
+    print("saved", out); return True
+
 def gen_openai(prompt, out, size="1024x1536"):
     key = os.environ.get("OPENAI_API_KEY")
     if not key:
@@ -45,5 +56,6 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         print(__doc__); sys.exit(1)
     prompt, out = sys.argv[1], sys.argv[2]
-    provider = sys.argv[4] if "--provider" in sys.argv else "openai"
-    (gen_openai if provider == "openai" else gen_stability)(prompt, out)
+    provider = sys.argv[sys.argv.index("--provider") + 1] if "--provider" in sys.argv else "pollinations"
+    {"pollinations": gen_pollinations, "openai": gen_openai,
+     "stability": gen_stability}[provider](prompt, out)
