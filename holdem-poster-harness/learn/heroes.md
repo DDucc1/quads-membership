@@ -28,3 +28,21 @@
 
 - 재생성: `python gen_hero.py "프롬프트" out.jpg` (기본 pollinations, 키 불요)
 - 한계: 무료 티어 ~627×940 → 1080 업스케일 합성(화면용 OK, 인쇄 4×는 OPENAI_API_KEY 필요)
+
+## 연기·후드 심화 (p005 — 사용자 확정 무드, 2026-07-31)
+
+프롬프트 베이스: `cinematic photorealistic poster hero shot, dramatic rim lighting, film grain, high contrast,
+black background, no text, no watermark, face completely hidden in deep shadow under the hood` + 변주.
+축: 색온도(앰버/틸/마젠타/레드/그린) × 자세(정면/뒷모습/듀오/딜러 손) × 연기 밀도.
+얼굴 식별되는 생성물은 재생성(비식별 원칙) — teal/red 2회, dealer 3회.
+
+| 파일 | 변주 | p005 |
+|---|---|---|
+| sm_amber | 앰버 백라이트+엠버, 옆얼굴 실루엣 | AMBER EXHALE |
+| sm_teal | 틸 연기, 후드 그늘 | COLD FRONT |
+| sm_magenta | 마젠타 연기, 카드 | VIOLET WHISPER |
+| sm_duo | 흑백 후드 듀오 | HEADS UP |
+| sm_back | 안개 속 뒷모습 | WALK IN |
+| sm_red | 레드 헤일로 실루엣 | RED HALO |
+| sm_dealer | 그린 펠트 테이블 후드 | GREEN FELT |
+| sm_green | 그린 연기 팬텀 | PHANTOM STACK |
